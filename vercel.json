@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/landing/index.html" },
+    { "source": "/favicon.svg", "destination": "/landing/favicon.svg" },
+    { "source": "/(.*)", "destination": "/landing/$1" }
+  ]
+}
