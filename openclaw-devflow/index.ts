@@ -104,6 +104,79 @@ export default function (api: { registerTool: (def: ToolDef, opts?: { optional?:
     },
     { optional: true }
   );
+
+  // PR review helper: summarize diff for the agent
+  api.registerTool(
+    {
+      name: 'devflow_pr_reviewer',
+      description:
+        'Summarize a git diff (e.g. origin/main...HEAD) for review. Use before suggesting PR feedback or fixes.',
+      parameters: {
+        type: 'object',
+        properties: {
+          projectPath: {
+            type: 'string',
+            description: 'Git repository path (defaults to current workspace)',
+          },
+          range: {
+            type: 'string',
+            description: 'Git diff range, e.g. origin/main...HEAD',
+            default: 'origin/main...HEAD',
+          },
+        },
+        required: ['range'],
+      },
+      async execute(_id: string, params: { projectPath?: string; range?: string }) {
+        const { exec } = await import('node:child_process');
+        const { promisify } = await import('node:util');
+        const run = promisify(exec);
+        const cwd = params.projectPath || process.cwd();
+        const range = params.range || 'origin/main...HEAD';
+        try {
+          const { stdout } = await run(`git diff --stat ${range}`, {
+            cwd,
+            maxBuffer: 256 * 1024,
+          });
+          const { stdout: fullDiff } = await run(`git diff --unified=3 ${range}`, {
+            cwd,
+            maxBuffer: 512 * 1024,
+          });
+          const diffSnippet =
+            fullDiff.length > 2000 ? fullDiff.slice(-2000) : fullDiff || '(no diff output)';
+          const summary =
+            stdout.trim() || 'No git diff stat output (check that the range exists and repo is clean).';
+          const text = [
+            'devflow_pr_reviewer summary:',
+            '',
+            '--- Git diff --stat ---',
+            summary,
+            '',
+            '--- Git diff tail (for the agent to inspect) ---',
+            diffSnippet,
+          ].join('\n');
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text,
+              },
+            ],
+          };
+        } catch (err: any) {
+          const msg = (err?.stdout || err?.stderr || String(err)).trim();
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: `devflow_pr_reviewer: failed to run git diff for range "${range}". Error:\n\n${msg}`,
+              },
+            ],
+          };
+        }
+      },
+    },
+    { optional: true }
+  );
 }
 
 type ToolDef = {

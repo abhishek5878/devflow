@@ -62,6 +62,7 @@ DevFlow’s Context Engine (git + stack + rules + errors → context.md) is the 
 | Feature | Status |
 |---------|--------|
 | **DevFlow OpenClaw plugin** | ✓ `openclaw-devflow/` — registers `devflow_context_snapshot` tool for AI handoff from OpenClaw agent |
+| **OpenClaw as DevFlow provider** | ✓ Optional `openclaw` provider in proxy (DEVFLOW_OPENCLAW_URL/DEVFLOW_OPENCLAW_MODEL) |
 
 ## Next Priorities (To Match Vision)
 

@@ -101,6 +101,38 @@ npm run test:client   # terminal 2 (requires OPENAI_KEY or ANTHROPIC_KEY)
 
 At 90% capacity: warning logged. At 100%: automatic failover. Ollama used as free fallback if running.
 
+### OpenClaw (optional provider)
+
+If you run OpenClaw locally, DevFlow can route through it as another provider.
+
+1. **Enable the OpenAI-compatible endpoint in OpenClaw (required):**
+
+Add this to `~/.openclaw/openclaw.json` (or via the Control UI Config tab), then restart with `openclaw gateway restart`:
+
+```json
+{
+  "gateway": {
+    "http": {
+      "endpoints": {
+        "chatCompletions": {
+          "enabled": true
+        }
+      }
+    }
+  }
+}
+```
+
+2. **Point DevFlow at OpenClaw** (optional overrides, defaults shown):
+
+```bash
+# .env
+DEVFLOW_OPENCLAW_URL=http://localhost:18789/v1
+DEVFLOW_OPENCLAW_MODEL=openclaw-default
+```
+
+When these are set and OpenClaw is running, DevFlow will treat it like any other provider and fall back to it after Claude/GPT/Gemini, before Ollama.
+
 ---
 
 ## Phase 2: Context Engine
