@@ -91,6 +91,28 @@ Summarize a git diff for PR-style review, and make sure a fresh DevFlow context 
 
 On error (e.g. not a git repo), the tool still returns JSON with `error: true`, a short `message`, and the raw `detail` from git.
 
+### `devflow_nightly_health_cycle`
+
+End-to-end nightly helper: refresh context, run tests, and summarize the current git diff.
+
+- **Parameters:**
+  - `projectPath?: string` — project root / git repo path (defaults to current workspace)
+  - `testCommand?: string` — test command (default: `npm test`)
+  - `range?: string` — git diff range (default: `origin/main...HEAD`)
+
+- **Behavior:**
+  - Runs DevFlow snapshot with `skipTypeCheck: true` to refresh `context.md`.
+  - Runs the test command and captures a short tail of the output plus success/failure.
+  - Computes a `git diff --stat` and a small unified diff tail for the given range.
+  - Returns **structured JSON** (as a string) with:
+    - `tool`: `"devflow_nightly_health_cycle"`
+    - `projectPath`
+    - `snapshot`: `{ path?, wasGitRepo?, error? }`
+    - `tests`: `{ command, success, exitCode?, outputTail }`
+    - `diff`: `{ range, summary, files_changed, diff_tail, error? }`
+
+Use this as the single tool to call from schedulers (cron, CI, OpenClaw workflows) when you want a quick **“what happened while I was away?”** summary.
+
 ### Example agent prompt
 
 From an OpenClaw chat, you can say:
@@ -104,3 +126,17 @@ The agent will:
 3. Use that payload to drive a focused code review conversation.
 
 **Note:** OpenClaw requires Node 22+. DevFlow works on Node 18+.
+
+## Example: Nightly "Wake Up to Magic" Workflow
+
+To run DevFlow tools on a schedule (e.g. while you sleep), see:
+
+- `examples/nightly-devflow-health-and-fix.md`
+
+That example shows how to combine:
+
+- `devflow_context_snapshot` → refresh `context.md`
+- `devflow_e2e_guard` → run tests
+- `devflow_pr_reviewer` → summarize pending changes
+
+You can adapt it to your scheduler (cron, CI, or OpenClaw workflow skill) so you **wake up to fresh context, test status, and PR-ready summaries**.

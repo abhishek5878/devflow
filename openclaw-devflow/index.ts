@@ -242,6 +242,163 @@ export default function (api: { registerTool: (def: ToolDef, opts?: { optional?:
     },
     { optional: true }
   );
+
+  // Nightly health cycle: snapshot + tests + diff summary
+  api.registerTool(
+    {
+      name: 'devflow_nightly_health_cycle',
+      description:
+        'Run a DevFlow health cycle: refresh context.md, run tests, and summarize git diff for review. Ideal for nightly or scheduled runs.',
+      parameters: {
+        type: 'object',
+        properties: {
+          projectPath: {
+            type: 'string',
+            description: 'Project root (git repo path, defaults to current workspace)',
+          },
+          testCommand: {
+            type: 'string',
+            description: 'Test command to run (default: npm test)',
+            default: 'npm test',
+          },
+          range: {
+            type: 'string',
+            description: 'Git diff range for review (default: origin/main...HEAD)',
+            default: 'origin/main...HEAD',
+          },
+        },
+      },
+      async execute(
+        _id: string,
+        params: { projectPath?: string; testCommand?: string; range?: string }
+      ) {
+        const projectPath = params.projectPath || process.cwd();
+        const testCommand = params.testCommand || 'npm test';
+        const range = params.range || 'origin/main...HEAD';
+
+        const { exec } = await import('node:child_process');
+        const { promisify } = await import('node:util');
+        const run = promisify(exec);
+
+        const snapshot: {
+          path?: string;
+          wasGitRepo?: boolean;
+          error?: string;
+        } = {};
+
+        try {
+          const result = await generateSnapshot(projectPath, {
+            skipTypeCheck: true,
+            quiet: true,
+          });
+          snapshot.path = result.path;
+          snapshot.wasGitRepo = result.wasGitRepo;
+        } catch (err: any) {
+          snapshot.error = String(err?.message || err);
+        }
+
+        const tests: {
+          command: string;
+          success: boolean;
+          exitCode?: number;
+          outputTail: string;
+        } = {
+          command: testCommand,
+          success: false,
+          outputTail: '',
+        };
+
+        try {
+          const { stdout, stderr } = await run(testCommand, {
+            cwd: projectPath,
+            maxBuffer: 512 * 1024,
+          });
+          const out = (stdout + '\n' + stderr).trim();
+          tests.outputTail =
+            out.length > 1200 ? out.slice(-1200) : out || '(no output)';
+          tests.success = true;
+        } catch (err: any) {
+          const stdout = err?.stdout || '';
+          const stderr = err?.stderr || '';
+          const out = String(stdout + '\n' + stderr || err).trim();
+          tests.outputTail =
+            out.length > 1200 ? out.slice(-1200) : out || '(no output)';
+          tests.success = false;
+          if (typeof err?.code === 'number') {
+            tests.exitCode = err.code;
+          }
+        }
+
+        const diff: {
+          range: string;
+          summary: string;
+          files_changed: { file: string; stats: string }[];
+          diff_tail: string;
+          error?: string;
+        } = {
+          range,
+          summary: '',
+          files_changed: [],
+          diff_tail: '',
+        };
+
+        try {
+          const { stdout } = await run(`git diff --stat ${range}`, {
+            cwd: projectPath,
+            maxBuffer: 256 * 1024,
+          });
+          const { stdout: fullDiffRaw } = await run(
+            `git diff --unified=3 ${range}`,
+            {
+              cwd: projectPath,
+              maxBuffer: 512 * 1024,
+            }
+          );
+
+          diff.summary =
+            stdout.trim() ||
+            'No git diff stat output (check that the range exists and repo is clean).';
+
+          const tailLimit = 2000;
+          diff.diff_tail =
+            fullDiffRaw.length > tailLimit
+              ? fullDiffRaw.slice(-tailLimit)
+              : fullDiffRaw || '(no diff output)';
+
+          diff.files_changed = diff.summary
+            .split('\n')
+            .filter((line) => line.includes('|'))
+            .map((line) => {
+              const [file, rest] = line.split('|');
+              return {
+                file: file.trim(),
+                stats: (rest || '').trim(),
+              };
+            });
+        } catch (err: any) {
+          diff.error = String(err?.message || err);
+        }
+
+        const payload = {
+          tool: 'devflow_nightly_health_cycle',
+          projectPath,
+          snapshot,
+          tests,
+          diff,
+        };
+
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify(payload, null, 2),
+            },
+          ],
+        };
+      },
+    },
+    { optional: true }
+  );
 }
 
 type ToolDef = {
