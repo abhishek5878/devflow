@@ -4,6 +4,8 @@
  */
 
 import { generateSnapshot } from 'devflow-ai/snapshot';
+import path from 'node:path';
+import { access } from 'node:fs/promises';
 
 export default function (api: { registerTool: (def: ToolDef, opts?: { optional?: boolean }) => void }) {
   // Context snapshot on demand
@@ -123,52 +125,115 @@ export default function (api: { registerTool: (def: ToolDef, opts?: { optional?:
             description: 'Git diff range, e.g. origin/main...HEAD',
             default: 'origin/main...HEAD',
           },
+          fullDiff: {
+            type: 'boolean',
+            description:
+              'If true, return a larger unified diff payload for in-depth agent review.',
+            default: false,
+          },
         },
         required: ['range'],
       },
-      async execute(_id: string, params: { projectPath?: string; range?: string }) {
+      async execute(
+        _id: string,
+        params: { projectPath?: string; range?: string; fullDiff?: boolean }
+      ) {
         const { exec } = await import('node:child_process');
         const { promisify } = await import('node:util');
         const run = promisify(exec);
-        const cwd = params.projectPath || process.cwd();
+        const projectPath = params.projectPath || process.cwd();
         const range = params.range || 'origin/main...HEAD';
+        const wantFullDiff = params.fullDiff ?? false;
+
+        // Ensure a DevFlow context snapshot exists for downstream agents.
+        let snapshotRefreshed = false;
+        const contextPath = path.join(projectPath, 'context.md');
+        let snapshotPath: string | null = contextPath;
+        try {
+          await access(contextPath);
+        } catch {
+          try {
+            const result = await generateSnapshot(projectPath, {
+              skipTypeCheck: true,
+              quiet: true,
+            });
+            snapshotRefreshed = true;
+            snapshotPath = result.path || contextPath;
+          } catch (err) {
+            console.warn(
+              '[DevFlow] devflow_pr_reviewer: failed to refresh context snapshot:',
+              err
+            );
+          }
+        }
+
         try {
           const { stdout } = await run(`git diff --stat ${range}`, {
-            cwd,
+            cwd: projectPath,
             maxBuffer: 256 * 1024,
           });
-          const { stdout: fullDiff } = await run(`git diff --unified=3 ${range}`, {
-            cwd,
-            maxBuffer: 512 * 1024,
-          });
-          const diffSnippet =
-            fullDiff.length > 2000 ? fullDiff.slice(-2000) : fullDiff || '(no diff output)';
+          const { stdout: fullDiffRaw } = await run(
+            `git diff --unified=3 ${range}`,
+            {
+              cwd: projectPath,
+              maxBuffer: wantFullDiff ? 2 * 1024 * 1024 : 512 * 1024,
+            }
+          );
+
           const summary =
-            stdout.trim() || 'No git diff stat output (check that the range exists and repo is clean).';
-          const text = [
-            'devflow_pr_reviewer summary:',
-            '',
-            '--- Git diff --stat ---',
+            stdout.trim() ||
+            'No git diff stat output (check that the range exists and repo is clean).';
+
+          const diffLimit = wantFullDiff ? 16000 : 2000;
+          const diffText =
+            fullDiffRaw.length > diffLimit
+              ? fullDiffRaw.slice(-diffLimit)
+              : fullDiffRaw || '(no diff output)';
+
+          const filesChanged = summary
+            .split('\n')
+            .filter((line) => line.includes('|'))
+            .map((line) => {
+              const [file, rest] = line.split('|');
+              return {
+                file: file.trim(),
+                stats: (rest || '').trim(),
+              };
+            });
+
+          const payload = {
+            tool: 'devflow_pr_reviewer',
+            range,
+            snapshotRefreshed,
+            snapshotPath,
             summary,
-            '',
-            '--- Git diff tail (for the agent to inspect) ---',
-            diffSnippet,
-          ].join('\n');
+            files_changed: filesChanged,
+            diff: wantFullDiff ? diffText : undefined,
+            diff_tail: wantFullDiff ? undefined : diffText,
+          };
+
           return {
             content: [
               {
                 type: 'text' as const,
-                text,
+                text: JSON.stringify(payload, null, 2),
               },
             ],
           };
         } catch (err: any) {
           const msg = (err?.stdout || err?.stderr || String(err)).trim();
+          const payload = {
+            tool: 'devflow_pr_reviewer',
+            range,
+            error: true,
+            message: `failed to run git diff for range "${range}"`,
+            detail: msg,
+          };
           return {
             content: [
               {
                 type: 'text' as const,
-                text: `devflow_pr_reviewer: failed to run git diff for range "${range}". Error:\n\n${msg}`,
+                text: JSON.stringify(payload, null, 2),
               },
             ],
           };

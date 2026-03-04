@@ -35,11 +35,48 @@ app.get('/favicon.ico', (_req, res) => res.status(204).end());
 
 /**
  * GET /v1/models - List models (required by some clients like Continue.dev)
+ *
+ * If the active provider exposes an OpenAI-compatible /v1/models endpoint
+ * (e.g. OpenClaw), we forward the request so clients can see real model/agent
+ * IDs. If that fails, we fall back to a minimal static response so status bars
+ * and dashboards still work.
  */
-app.get('/v1/models', (_req, res) => {
-  const active = providers.find(
-    (p) => p.key && p.baseUrl && getProviderStatus(p) !== 'exhausted'
-  );
+app.get('/v1/models', async (_req, res) => {
+  const available = getAvailableProviders(providers, getProviderStatus);
+  const active = available[0];
+
+  if (active?.baseUrl) {
+    try {
+      const base = active.baseUrl.replace(/\/$/, '');
+      const url = `${base}/models`;
+
+      const headers: Record<string, string> = {};
+      // Local providers like OpenClaw and Ollama usually do not need auth here.
+      if (
+        active.key &&
+        active.key !== 'openclaw' &&
+        active.key !== 'ollama'
+      ) {
+        headers['Authorization'] = `Bearer ${active.key}`;
+      }
+
+      const f = (globalThis as any).fetch;
+      if (typeof f === 'function') {
+        const resp = await f(url, { headers } as any);
+
+        if (resp.ok) {
+          const data = await resp.json();
+          return res.json(data);
+        }
+      }
+    } catch (err) {
+      console.warn(
+        '[DevFlow] Failed to proxy /v1/models to active provider:',
+        err
+      );
+    }
+  }
+
   res.json({
     object: 'list',
     data: [
@@ -115,7 +152,7 @@ app.get('/v1/health', (_req, res) => {
     status: getProviderStatus(p),
     tokens: p.tokens,
     limit: p.limit === Infinity ? '∞' : p.limit,
-    available: !!(p.key && (p.baseUrl || p.limit === Infinity)),
+    available: !!(p.baseUrl && getProviderStatus(p) !== 'exhausted'),
   }));
   res.json({ providers: status });
 });
