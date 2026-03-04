@@ -27,6 +27,7 @@
     "test:client": "tsx src/test-client.ts",
     "test:limits": "tsx src/test-limits.ts"
   },
+  "repository": { "type": "git", "url": "https://github.com/abhishek5878/devflow" },
   "keywords": ["ai", "proxy", "developer-tools", "productivity"],
   "license": "MIT",
   "engines": {

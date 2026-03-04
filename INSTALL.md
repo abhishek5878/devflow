@@ -31,9 +31,11 @@ Route through multiple AI providers with automatic failover when one hits its li
 - Command Palette → **"DevFlow: Start Proxy"**
 - Status bar shows: `DevFlow → Claude | 0k/100k`
 
-### Step 3: Point your AI tool at DevFlow
+### Step 3: Connect your AI tool to DevFlow
 
-**Continue.dev** — Edit `~/.continue/config.json`:
+After starting the proxy, click **Connect AI Tool** in the notification, or run Command Palette → "DevFlow: Connect Continue.dev / Roo Code / Cline" → select your tool. Then **reload the window** and select "DevFlow Router" from the model dropdown.
+
+**Manual** — Edit your tool's config (e.g. `~/.continue/config.json`) to add:
 ```json
 {
   "models": [{
@@ -44,9 +46,7 @@ Route through multiple AI providers with automatic failover when one hits its li
 }
 ```
 
-**Other tools** — Use:
-- Endpoint: `http://localhost:8080/v1`
-- API key: `devflow-local`
+**Dashboard** — Open `http://localhost:8080/dashboard` to see token usage.
 
 ---
 

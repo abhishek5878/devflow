@@ -72,8 +72,16 @@ export async function startProxyCommand(context: vscode.ExtensionContext): Promi
   });
 
   vscode.window.showInformationMessage(
-    `✓ DevFlow proxy started at localhost:${port}`
-  );
+    `✓ DevFlow proxy running at localhost:${port}`,
+    'Connect AI Tool',
+    'Open Dashboard'
+  ).then((action) => {
+    if (action === 'Connect AI Tool') {
+      vscode.commands.executeCommand('devflow.connectContinue');
+    } else if (action === 'Open Dashboard') {
+      vscode.commands.executeCommand('devflow.openDashboard');
+    }
+  });
 }
 
 export function stopProxyCommand(): void {

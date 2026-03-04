@@ -28,10 +28,12 @@ function runGit(
   fallback?: string
 ): string {
   try {
+    // Use shell: true for Windows; avoid 2>/dev/null (Unix-only)
     return execSync(command, {
       cwd: projectPath,
       encoding: 'utf-8',
-      maxBuffer: 2 * 1024 * 1024, // 2MB
+      maxBuffer: 2 * 1024 * 1024,
+      stdio: ['pipe', 'pipe', 'pipe'],
     })
       .trim()
       .replace(/\r\n/g, '\n');
@@ -41,7 +43,7 @@ function runGit(
 }
 
 function getCommitCount(projectPath: string): number {
-  const output = runGit(projectPath, 'git rev-list --count HEAD 2>/dev/null');
+  const output = runGit(projectPath, 'git rev-list --count HEAD');
   const n = parseInt(output, 10);
   return Number.isNaN(n) ? 0 : n;
 }
@@ -70,14 +72,14 @@ export async function scanGitHistory(
       if (commitCount === 1) {
         const namesOutput = runGit(
           projectPath,
-          'git log -1 --name-only --pretty=format: HEAD 2>/dev/null'
+          'git log -1 --name-only --pretty=format: HEAD'
         );
         changedFiles = namesOutput
           ? namesOutput.split('\n').map((f) => f.trim()).filter(Boolean)
           : [];
         diffStat = runGit(
           projectPath,
-          'git log -1 --stat --pretty=format: HEAD 2>/dev/null'
+          'git log -1 --stat --pretty=format: HEAD'
         );
       } else {
         const effectiveLookback = Math.min(
@@ -87,14 +89,14 @@ export async function scanGitHistory(
         const revRange = `HEAD~${effectiveLookback}..HEAD`;
         const namesOutput = runGit(
           projectPath,
-          `git diff --name-only ${revRange} 2>/dev/null`
+          `git diff --name-only ${revRange}`
         );
         changedFiles = namesOutput
           ? namesOutput.split('\n').map((f) => f.trim()).filter(Boolean)
           : [];
         diffStat = runGit(
           projectPath,
-          `git diff --stat ${revRange} 2>/dev/null`
+          `git diff --stat ${revRange}`
         );
       }
     }
@@ -103,7 +105,7 @@ export async function scanGitHistory(
     const sinceFlag = `--since="${lookbackHours} hours ago"`;
     const recentOutput = runGit(
       projectPath,
-      `git log --oneline -10 ${sinceFlag} 2>/dev/null`
+      `git log --oneline -10 ${sinceFlag}`
     );
     const recentCommits = recentOutput
       ? recentOutput.split('\n').map((s) => s.trim()).filter(Boolean)
@@ -113,7 +115,7 @@ export async function scanGitHistory(
     if (recentCommits.length === 0 && commitCount > 0) {
       const fallbackLog = runGit(
         projectPath,
-        `git log --oneline -${Math.min(10, commitCount)} 2>/dev/null`
+        `git log --oneline -${Math.min(10, commitCount)}`
       );
       if (fallbackLog) {
         recentCommits.push(
@@ -123,18 +125,18 @@ export async function scanGitHistory(
     }
 
     // Uncommitted changes
-    const statusOutput = runGit(projectPath, 'git status --short 2>/dev/null');
+    const statusOutput = runGit(projectPath, 'git status --short');
     const uncommittedChanges = statusOutput.length > 0;
 
     let uncommittedDiffStat = '';
     if (uncommittedChanges) {
       uncommittedDiffStat = runGit(
         projectPath,
-        'git diff HEAD --stat 2>/dev/null'
+        'git diff HEAD --stat'
       );
       const stagedStat = runGit(
         projectPath,
-        'git diff --cached --stat 2>/dev/null'
+        'git diff --cached --stat'
       );
       if (stagedStat) {
         uncommittedDiffStat = uncommittedDiffStat

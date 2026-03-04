@@ -46,8 +46,12 @@ const pathArg = args.filter(
 const projectPath = pathArg ? resolve(process.cwd(), pathArg) : process.cwd();
 
 async function main() {
-  // Minimal output - Claude Spend style
-  const resultPath = await generateSnapshot(projectPath, {
+  // Instant feedback - user sees something immediately
+  if (copyToClipboard) {
+    process.stdout.write('DevFlow — scanning project...\n');
+  }
+
+  const { path: resultPath, wasGitRepo } = await generateSnapshot(projectPath, {
     skipTypeCheck: skipTsc,
     outputPath,
     quiet: copyToClipboard,
@@ -60,8 +64,21 @@ async function main() {
       const { default: clipboard } = await import('clipboardy');
       await clipboard.write(content);
       console.log('\n✓ Copied to clipboard. Paste into Claude.ai to resume.\n');
+      if (!wasGitRepo) {
+        console.log('  Tip: Run from a git project root for fuller context.\n');
+      }
     } catch {
-      console.log(`\n✓ Done. Open ${resultPath} and copy the content.\n`);
+      console.log(`\n✓ Saved to ${resultPath}`);
+      console.log('  (Clipboard unavailable — open the file and copy, or use --open)\n');
+      if (openFile === false) {
+        const { execSync } = await import('child_process');
+        const os = process.platform;
+        const openCmd = os === 'darwin' ? 'open' : os === 'win32' ? 'start' : 'xdg-open';
+        try {
+          execSync(`${openCmd} "${resultPath}"`, { stdio: 'ignore' });
+          console.log('  Opened the file for you.\n');
+        } catch { /* ignore */ }
+      }
     }
   } else {
     console.log(`\n✓ Saved to ${resultPath}\n`);

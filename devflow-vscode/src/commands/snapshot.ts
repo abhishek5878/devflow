@@ -48,7 +48,7 @@ export async function generateSnapshotCommand(): Promise<void> {
           projectPath
         );
 
-        await generateSnapshot(projectPath, {
+        const { path: resultPath } = await generateSnapshot(projectPath, {
           skipTypeCheck,
           outputPath,
         });
@@ -56,16 +56,16 @@ export async function generateSnapshotCommand(): Promise<void> {
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 
         const action = await vscode.window.showInformationMessage(
-          `✓ context.md generated (${elapsed}s)`,
+          `✓ context.md generated (${elapsed}s) — paste into Claude.ai to resume`,
           'Open File',
           'Copy to Clipboard'
         );
 
         if (action === 'Open File') {
-          const doc = await vscode.workspace.openTextDocument(outputPath);
+          const doc = await vscode.workspace.openTextDocument(resultPath);
           await vscode.window.showTextDocument(doc);
         } else if (action === 'Copy to Clipboard') {
-          const content = readFileSync(outputPath, 'utf-8');
+          const content = readFileSync(resultPath, 'utf-8');
           await vscode.env.clipboard.writeText(content);
           vscode.window.showInformationMessage(
             'DevFlow: Copied context.md to clipboard'

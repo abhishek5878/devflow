@@ -10,6 +10,7 @@ const checks = [
   { name: 'npx command', pattern: /npx abhishek5878\/devflow/ },
   { name: 'Claude.ai mention', pattern: /Claude\.ai/ },
   { name: 'Copy button', pattern: /Copy|copy/ },
+  { name: 'Who this is for', pattern: /Who this is for/ },
   { name: 'title', pattern: /<title>[\s\S]*?DevFlow[\s\S]*?<\/title>/ },
   { name: 'viewport meta', pattern: /viewport/ },
   { name: 'GitHub link', pattern: /github\.com/ },

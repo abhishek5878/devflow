@@ -92,7 +92,14 @@ async function startProxyCommand(context) {
             console.log(`[DevFlow Proxy] exited with code ${code}`);
         }
     });
-    vscode.window.showInformationMessage(`✓ DevFlow proxy started at localhost:${port}`);
+    vscode.window.showInformationMessage(`✓ DevFlow proxy running at localhost:${port}`, 'Connect AI Tool', 'Open Dashboard').then((action) => {
+        if (action === 'Connect AI Tool') {
+            vscode.commands.executeCommand('devflow.connectContinue');
+        }
+        else if (action === 'Open Dashboard') {
+            vscode.commands.executeCommand('devflow.openDashboard');
+        }
+    });
 }
 function stopProxyCommand() {
     if (!proxyProcess) {

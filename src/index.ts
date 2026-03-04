@@ -90,7 +90,10 @@ app.post('/v1/chat/completions', async (req, res) => {
   } catch (err) {
     const proxyErr = err as { status?: number; message?: string; provider?: string };
     const status = proxyErr.status || 500;
-    const message = proxyErr.message || 'Internal server error';
+    let message = proxyErr.message || 'Internal server error';
+    if (message.includes('All providers exhausted')) {
+      message += ` See dashboard: http://localhost:${PORT}/dashboard`;
+    }
     console.error(`[DevFlow] Error (${proxyErr.provider || 'unknown'}):`, message);
     res.status(status).json({
       error: { message, type: 'api_error', provider: proxyErr.provider },
@@ -113,6 +116,45 @@ app.get('/v1/health', (_req, res) => {
 });
 
 /**
+ * GET /dashboard - Web dashboard (open in browser)
+ */
+app.get('/dashboard', (_req, res) => {
+  res.setHeader('Content-Type', 'text/html');
+  res.send(`<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>DevFlow Dashboard</title>
+<style>
+body{font-family:system-ui,sans-serif;margin:24px;background:#0a0a0a;color:#fafafa}
+h1{font-size:1.5rem}
+table{border-collapse:collapse;width:100%;max-width:480px}
+th,td{padding:10px 16px;text-align:left;border-bottom:1px solid #262626}
+th{color:#a1a1aa}
+.ok{color:#22c55e}.full{color:#ef4444}.warn{color:#f59e0b}
+</style>
+</head>
+<body>
+<h1>DevFlow Token Dashboard</h1>
+<p><a href="/status" style="color:#22c55e">/status</a> &middot; Proxy: <code>http://localhost:${PORT}/v1</code></p>
+<table><thead><tr><th>Provider</th><th>Used</th><th>Limit</th><th>Status</th></tr></thead>
+<tbody id="t"></tbody></table>
+<script>
+fetch('/status').then(r=>r.json()).then(d=>{
+  const t=d.providers||[];
+  document.getElementById('t').innerHTML=t.map(p=>{
+    const u=p.tokens/1000|0;
+    const lim=p.limit==='∞'?p.limit:(p.limit/1000|0)+'k';
+    const pct=p.limit==='∞'?'—':((p.tokens/p.limit)*100|0)+'%';
+    const s=p.available?'ok':'full';
+    const c=s==='ok'?(pct!=='—'&&pct>90?'warn':'ok'):'full';
+    return '<tr><td>'+p.name+'</td><td>'+u+'k</td><td>'+lim+'</td><td class="'+c+'">'+(s==='ok'?pct+' ✓':'Exhausted')+'</td></tr>';
+  }).join('')||'<tr><td colspan="4">No providers. Add API keys and restart proxy.</td></tr>';
+}).catch(()=>{document.getElementById('t').innerHTML='<tr><td colspan="4">Proxy not responding. Start with: DevFlow: Start Proxy</td></tr>';});
+</script>
+</body>
+</html>`);
+});
+
+/**
  * GET /status - VS Code extension status (active provider, token usage)
  */
 app.get('/status', (_req, res) => {
@@ -132,7 +174,7 @@ app.get('/status', (_req, res) => {
     activeProvider: active?.name ?? 'none',
     tokenUsage,
     providers: providers
-      .filter((p) => p.key && p.baseUrl)
+      .filter((p) => p.baseUrl && (p.key || p.name === 'ollama'))
       .map((p) => ({
         name: p.name,
         tokens: p.tokens,
@@ -148,9 +190,9 @@ const server = app.listen(PORT, () => {
 │  DevFlow AI - Local Proxy Router                │
 │  OpenAI-compatible: http://localhost:${PORT}/v1   │
 │                                                 │
-│  Configure your IDE:                            │
-│    ai.endpoint: http://localhost:${PORT}/v1      │
-│    ai.apiKey: devflow-local (or any key)       │
+│  Dashboard: http://localhost:${PORT}/dashboard   │
+│  Configure: apiBase → localhost:${PORT}/v1       │
+│             apiKey → devflow-local               │
 └─────────────────────────────────────────────────┘
 `);
 });

@@ -66,18 +66,18 @@ async function generateSnapshotCommand() {
             const skipTypeCheck = config.get('skipTypeCheck', false);
             const outputPathTemplate = config.get('contextOutputPath', '${workspaceFolder}/context.md');
             const outputPath = outputPathTemplate.replace('${workspaceFolder}', projectPath);
-            await generateSnapshot(projectPath, {
+            const { path: resultPath } = await generateSnapshot(projectPath, {
                 skipTypeCheck,
                 outputPath,
             });
             const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-            const action = await vscode.window.showInformationMessage(`✓ context.md generated (${elapsed}s)`, 'Open File', 'Copy to Clipboard');
+            const action = await vscode.window.showInformationMessage(`✓ context.md generated (${elapsed}s) — paste into Claude.ai to resume`, 'Open File', 'Copy to Clipboard');
             if (action === 'Open File') {
-                const doc = await vscode.workspace.openTextDocument(outputPath);
+                const doc = await vscode.workspace.openTextDocument(resultPath);
                 await vscode.window.showTextDocument(doc);
             }
             else if (action === 'Copy to Clipboard') {
-                const content = (0, fs_1.readFileSync)(outputPath, 'utf-8');
+                const content = (0, fs_1.readFileSync)(resultPath, 'utf-8');
                 await vscode.env.clipboard.writeText(content);
                 vscode.window.showInformationMessage('DevFlow: Copied context.md to clipboard');
             }

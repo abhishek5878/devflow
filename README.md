@@ -95,10 +95,10 @@ npm run test:client   # terminal 2 (requires OPENAI_KEY or ANTHROPIC_KEY)
 1. Claude (100k limit)
 2. GPT-4 (80k limit)
 3. Gemini (90k limit)
-4. Amazon Q (∞, when integrated)
-5. Codeium (∞, when integrated)
+4. Ollama (∞, local — run `ollama run llama3.2`)
+5. Amazon Q, Codeium (∞, when integrated)
 
-At 90% capacity: warning logged. At 100%: automatic failover to next provider.
+At 90% capacity: warning logged. At 100%: automatic failover. Ollama used as free fallback if running.
 
 ---
 

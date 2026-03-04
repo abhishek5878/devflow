@@ -57,18 +57,26 @@ export function getDefaultProviders(env: NodeJS.ProcessEnv): ProviderConfig[] {
       model: 'gemini-2.0-flash',
     },
     {
+      name: 'ollama',
+      key: 'ollama',
+      tokens: 0,
+      limit: Infinity,
+      baseUrl: 'http://localhost:11434/v1',
+      model: env.DEVFLOW_OLLAMA_MODEL || 'llama3.2',
+    },
+    {
       name: 'amazon-q',
       key: null,
       tokens: 0,
       limit: Infinity,
-      // Placeholder - integrates with AWS CodeWhisperer
+      // TODO: AWS Builder ID integration
     },
     {
       name: 'codeium',
       key: null,
       tokens: 0,
       limit: Infinity,
-      // Placeholder - free tier API
+      // TODO: Codeium API integration
     },
   ];
 
@@ -90,7 +98,7 @@ export function getAvailableProviders(
   statusFn: (p: ProviderConfig) => ProviderStatus
 ): ProviderConfig[] {
   return providers
-    .filter((p) => p.key !== null && p.baseUrl) // Has API key and is configured
+    .filter((p) => (p.key !== null || p.baseUrl) && p.baseUrl) // Has baseUrl; key optional for local (Ollama)
     .filter((p) => statusFn(p) !== 'exhausted')
     .sort((a, b) => {
       // Paid providers first (finite limit), then free (infinite)

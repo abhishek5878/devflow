@@ -20,10 +20,15 @@ export interface SnapshotOptions {
   quiet?: boolean;
 }
 
+export interface SnapshotResult {
+  path: string;
+  wasGitRepo: boolean;
+}
+
 export async function generateSnapshot(
   projectPath: string = process.cwd(),
   options: SnapshotOptions = {}
-): Promise<string> {
+): Promise<SnapshotResult> {
   const { skipTypeCheck = false, outputPath: customOutput, quiet } = options;
   const startTime = Date.now();
 
@@ -55,8 +60,13 @@ export async function generateSnapshot(
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 
+  const wasGitRepo = git.diffStat !== 'Not a git repository';
+
   if (!quiet) {
     console.log(`✓ Scanned git history (${git.changedFiles.length} changed files)`);
+    if (!wasGitRepo) {
+      console.log('  ⚠ Not a git repo — minimal context. Run from project root for full context.');
+    }
     const stackParts = [stack.primary, stack.language, stack.database].filter(
       Boolean
     );
@@ -72,5 +82,5 @@ export async function generateSnapshot(
     console.log(`📄 ${outputPath}\n`);
   }
 
-  return outputPath;
+  return { path: outputPath, wasGitRepo };
 }

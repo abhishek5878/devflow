@@ -31,8 +31,9 @@ export async function proxyChatCompletion(
   const available = getAvailableProviders(providers, getProviderStatus);
 
   if (available.length === 0) {
+    const ollamaTip = ' Run `ollama run llama3.2` for a free local fallback.';
     throw new Error(
-      'No providers available. All limits exhausted. Add API keys or wait for reset.'
+      'All providers exhausted. Add API keys or wait for reset.' + ollamaTip
     );
   }
 
@@ -147,6 +148,22 @@ export async function proxyChatCompletion(
             provider.name,
             next.name,
             'Rate limit exceeded (429)'
+          );
+          return tryProvider(next, attemptIndex + 1);
+        }
+      }
+
+      // Connection errors (e.g. Ollama not running): try next provider
+      const isConnError =
+        (e?.message?.includes('ECONNREFUSED') ?? false) ||
+        (e?.message?.includes('fetch failed') ?? false);
+      if (isConnError) {
+        const next = available[attemptIndex + 1];
+        if (next) {
+          onProviderSwitch?.(
+            provider.name,
+            next.name,
+            'Unavailable (connection failed)'
           );
           return tryProvider(next, attemptIndex + 1);
         }

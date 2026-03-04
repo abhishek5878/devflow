@@ -45,37 +45,63 @@ const statusbar_1 = require("./statusbar");
 const proxy_1 = require("./commands/proxy");
 const panel_1 = require("./dashboard/panel");
 const setup_1 = require("./commands/setup");
+const connect_1 = require("./commands/connect");
 let statusBar;
-function showGetStarted(_context) {
-    const panel = vscode.window.createWebviewPanel('devflowGetStarted', 'DevFlow: Get Started', vscode.ViewColumn.One, { enableScripts: false });
-    panel.webview.html = `<!DOCTYPE html>
+function showGetStarted(context) {
+    const panel = vscode.window.createWebviewPanel('devflowGetStarted', 'DevFlow: Get Started', vscode.ViewColumn.One, { enableScripts: true });
+    panel.webview.html = getStartedHtml(panel.webview);
+    panel.webview.onDidReceiveMessage((msg) => {
+        if (msg.command === 'run') {
+            vscode.commands.executeCommand(msg.id);
+        }
+    });
+}
+function getStartedHtml(webview) {
+    const run = (cmd) => `runCommand('${cmd}')`;
+    return `<!DOCTYPE html>
 <html>
-<head><meta charset="UTF-8"><style>body{font-family:var(--vscode-font-family);padding:24px;line-height:1.6} code{background:var(--vscode-textBlockQuote-background);padding:2px 6px;border-radius:4px} h2{margin-top:24px} ol{padding-left:20px} .step{margin:16px 0}</style></head>
+<head><meta charset="UTF-8">
+<style>
+  body{font-family:var(--vscode-font-family);padding:24px;line-height:1.6;max-width:560px}
+  code{background:var(--vscode-textBlockQuote-background);padding:2px 6px;border-radius:4px}
+  h2{margin-top:28px;margin-bottom:8px}
+  .btn{display:inline-block;background:var(--vscode-button-background);color:var(--vscode-button-foreground);
+    padding:8px 16px;border-radius:4px;cursor:pointer;margin:4px 8px 4px 0;font-size:13px;border:none}
+  .btn:hover{opacity:0.9}
+  .tip{background:var(--vscode-textBlockQuote-background);padding:12px 16px;border-radius:6px;margin:16px 0;font-size:14px}
+  .steps{list-style:none;padding:0}
+  .steps li{margin:12px 0;padding-left:24px;position:relative}
+  .steps li::before{content:"→";position:absolute;left:0;color:var(--vscode-textLink-foreground)}
+</style>
+</head>
 <body>
 <h1>DevFlow: Never Lose Your AI Context</h1>
-<p>Two ways to use DevFlow:</p>
 
-<h2>1. Context Snapshot (Zero Setup)</h2>
-<p><strong>For Cursor, Claude Code, Copilot, or any tool that hit limits:</strong></p>
-<ol>
-  <li>Press <code>Cmd+Shift+D</code> (Mac) or <code>Ctrl+Shift+D</code> (Windows)</li>
-  <li>Get <code>context.md</code> in &lt;1 second</li>
-  <li>Copy it and paste into Claude.ai or any AI to resume exactly where you left off</li>
-</ol>
-<p>No API keys. No proxy. Just works.</p>
+<h2>Context Snapshot (No setup)</h2>
+<p>Hit a limit in Cursor, Claude Code, or Copilot? Press <code>Cmd+Shift+D</code>. Paste into Claude.ai. Done.</p>
+<button class="btn" onclick="${run('devflow.generateSnapshot')}">Generate Context Now</button>
 
-<h2>2. Proxy Routing (For Continue.dev, Roo Code, Cline)</h2>
-<p><strong>Route through multiple AI providers with automatic failover:</strong></p>
-<ol>
-  <li><strong>Add API Key</strong>: Command Palette → "DevFlow: Add API Key" → Add OpenAI and/or Anthropic key</li>
-  <li><strong>Start Proxy</strong>: Command Palette → "DevFlow: Start Proxy"</li>
-  <li><strong>Configure your tool</strong>: Point it at <code>http://localhost:8080/v1</code> with API key <code>devflow-local</code></li>
-</ol>
-<p>When one provider hits its limit, DevFlow silently switches to the next. You never notice.</p>
+<h2>Proxy Routing (Continue.dev, Roo Code, Cline)</h2>
+<p><strong>One key is enough.</strong> DevFlow adds Ollama as free fallback when you run <code>ollama run llama3.2</code>.</p>
+<ul class="steps">
+  <li><button class="btn" onclick="${run('devflow.addApiKey')}">Add API Key</button></li>
+  <li><button class="btn" onclick="${run('devflow.startProxy')}">Start Proxy</button></li>
+  <li><button class="btn" onclick="${run('devflow.connectContinue')}">Connect Your Tool</button></li>
+</ul>
 
-<hr>
-<p><small>Questions? See README or INSTALL.md in the extension folder.</small></p>
+<div class="tip">
+  <strong>After connecting:</strong> Reload your AI tool (or window), then select "DevFlow Router" from the model dropdown.
+</div>
+
+<button class="btn" onclick="${run('devflow.openDashboard')}">Open Dashboard</button>
+
+<hr style="margin-top:32px">
+<p style="font-size:12px;color:var(--vscode-descriptionForeground)">Context snapshot needs no keys. Proxy needs at least one (OpenAI or Anthropic).</p>
 </body>
+<script>
+  const vscode = acquireVsCodeApi();
+  function runCommand(id) { vscode.postMessage({ command: 'run', id }); }
+</script>
 </html>`;
 }
 let refreshInterval;
@@ -97,6 +123,11 @@ async function activate(context) {
     context.subscriptions.push(vscode.commands.registerCommand('devflow.addApiKey', () => (0, setup_1.addApiKeyCommand)(context)));
     context.subscriptions.push(vscode.commands.registerCommand('devflow.startProxy', () => (0, proxy_1.startProxyCommand)(context)));
     context.subscriptions.push(vscode.commands.registerCommand('devflow.stopProxy', proxy_1.stopProxyCommand));
+    context.subscriptions.push(vscode.commands.registerCommand('devflow.connectContinue', connect_1.connectContinueCommand));
+    context.subscriptions.push(vscode.commands.registerCommand('devflow.openDashboard', () => {
+        const port = vscode.workspace.getConfiguration('devflow').get('proxyPort', 8080);
+        vscode.env.openExternal(vscode.Uri.parse(`http://localhost:${port}/dashboard`));
+    }));
     // Status bar
     statusBar = new statusbar_1.DevFlowStatusBar();
     context.subscriptions.push({

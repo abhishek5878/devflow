@@ -4,7 +4,7 @@
   "description": "Never lose your AI coding session again",
   "version": "0.1.0",
   "publisher": "devflow",
-  "repository": {"type": "git", "url": "https://github.com/your-org/devflow"},
+  "repository": {"type": "git", "url": "https://github.com/abhishek5878/devflow"},
   "license": "MIT",
   "keywords": ["ai", "productivity", "context", "proxy", "continue", "cursor"],
   "engines": {
@@ -42,6 +42,14 @@
       {
         "command": "devflow.stopProxy",
         "title": "DevFlow: Stop Proxy"
+      },
+      {
+        "command": "devflow.connectContinue",
+        "title": "DevFlow: Connect Continue.dev / Roo Code / Cline"
+      },
+      {
+        "command": "devflow.openDashboard",
+        "title": "DevFlow: Open Dashboard in Browser"
       }
     ],
     "keybindings": [
