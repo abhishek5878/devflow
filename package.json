@@ -4,10 +4,25 @@
   "description": "Hybrid local proxy router and deterministic context engine for developer productivity",
   "type": "module",
   "main": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./snapshot": "./dist/cli/snapshot.js"
+  },
+  "bin": {
+    "devflow": "dist/cli/index.js"
+  },
   "scripts": {
     "build": "tsc",
+    "ext:setup": "npm run build && cd devflow-vscode && npm install && npm run compile",
+    "test": "npm run build && npm run test:context && npm run test:ext && node scripts/test-landing.js",
+    "test:proxy": "npm run test:limits",
+    "test:all": "bash scripts/test-all.sh",
+    "landing:serve": "npx serve landing -p 3001",
+    "test:context": "npm run snapshot -- --skip-tsc",
+    "test:ext": "cd devflow-vscode && npm run compile",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
+    "snapshot": "tsx src/cli/index.ts snapshot",
     "test:client": "tsx src/test-client.ts",
     "test:limits": "tsx src/test-limits.ts"
   },
@@ -17,6 +32,7 @@
     "node": ">=18"
   },
   "dependencies": {
+    "clipboardy": "^4.0.0",
     "express": "^4.21.0",
     "openai": "^4.73.0",
     "cors": "^2.8.5",

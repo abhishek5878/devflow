@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevFlow — Never lose your AI context when limits hit</title>
+  <meta name="description" content="One command. Context copied. Paste into Claude.ai. Resume. No install. No sign-up. 100% local.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --text: #fafafa;
+      --muted: #737373;
+      --accent: #22c55e;
+      --border: #262626;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    .wrap { max-width: 600px; margin: 0 auto; padding: 0 24px; }
+    .hero { padding: 80px 0 64px; text-align: center; }
+    .badge { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+    .hero h1 { font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 700; line-height: 1.2; margin-bottom: 12px; }
+    .hero-sub { font-size: 1.1rem; color: var(--muted); margin-bottom: 32px; }
+    .cmd {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      font-family: ui-monospace, monospace;
+      font-size: 1.25rem;
+      color: var(--accent);
+      margin-bottom: 20px;
+      display: block;
+    }
+    .btn {
+      display: inline-block;
+      background: var(--accent);
+      color: var(--bg);
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+    }
+    .btn:hover { opacity: 0.9; }
+    section { padding: 56px 0; border-top: 1px solid var(--border); }
+    h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 24px; }
+    .step { display: flex; gap: 16px; margin-bottom: 24px; }
+    .step:last-child { margin-bottom: 0; }
+    .step-num { width: 32px; height: 32px; background: var(--surface); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: var(--accent); flex-shrink: 0; }
+    .step h3 { font-size: 1rem; margin-bottom: 4px; }
+    .step p { font-size: 0.9rem; color: var(--muted); }
+    .step code { font-family: ui-monospace, monospace; background: var(--surface); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+    .items { display: flex; flex-direction: column; gap: 12px; }
+    .item { font-size: 0.95rem; color: var(--muted); }
+    .item strong { color: var(--text); font-weight: 500; }
+    .try { text-align: center; padding: 48px 0 64px; }
+    .try p { color: var(--muted); margin-bottom: 16px; font-size: 0.95rem; }
+    .pills { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 32px; }
+    .pill { font-size: 0.8rem; color: var(--muted); }
+    .pill strong { color: var(--accent); }
+    footer { padding: 40px 0; text-align: center; border-top: 1px solid var(--border); }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    footer .copy { font-size: 0.875rem; color: var(--muted); margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <p class="badge">Open Source · Free Forever</p>
+      <h1>You hit your AI limit.<br>You lose context. Again.</h1>
+      <p class="hero-sub">Type one command. Context copied. Paste into Claude.ai. Resume in seconds.</p>
+      <code class="cmd">npx devflow</code>
+      <a href="https://github.com/abhishek5878/devflow" class="btn">View on GitHub</a>
+      <p class="pills">
+        <span class="pill"><strong>100% local</strong></span>
+        <span class="pill"><strong>Zero config</strong></span>
+        <span class="pill"><strong>No data sent</strong></span>
+        <span class="pill"><strong>Open source</strong></span>
+      </p>
+    </div>
+  </header>
+
+  <section>
+    <div class="wrap">
+      <h2>Three steps. Ten seconds.</h2>
+      <p style="color: var(--muted); margin-bottom: 24px; font-size: 0.95rem;">No install. No sign-up. Your data never leaves your machine.</p>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div>
+          <h3>Open your terminal</h3>
+          <p>In your project directory. That's it.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div>
+          <h3>Run <code>npx devflow</code></h3>
+          <p>Copies git history, stack, rules, errors to your clipboard.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div>
+          <h3>Paste into Claude.ai</h3>
+          <p>Resume exactly where you left off. No re-explaining.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>What you get</h2>
+      <div class="items">
+        <div class="item"><strong>Session context</strong> — Changed files, recent commits</div>
+        <div class="item"><strong>Stack + rules</strong> — Next.js, TypeScript, .cursor/rules</div>
+        <div class="item"><strong>Known errors</strong> — TypeScript, terminal—next AI hits ground running</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="try">
+    <div class="wrap">
+      <h2>Try it now</h2>
+      <p>Open a terminal in your project. Paste the command. Done.</p>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
+        <code class="cmd" style="margin-bottom: 0;">npx devflow</code>
+        <button class="btn" onclick="navigator.clipboard.writeText('npx devflow').then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2e3)})">Copy</button>
+      </div>
+      <p class="pills">
+        <a href="https://github.com/abhishek5878/devflow">GitHub</a> · <a href="https://www.npmjs.com/package/devflow-ai">npm</a>
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <p>Built for developers who hit limits. Runs entirely on your machine. Sends nothing anywhere.</p>
+      <p class="copy">MIT · Open source, always.</p>
+    </div>
+  </footer>
+</body>
+</html>

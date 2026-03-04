@@ -1,0 +1,93 @@
+{
+  "name": "devflow",
+  "displayName": "DevFlow AI",
+  "description": "Never lose your AI coding session again",
+  "version": "0.1.0",
+  "publisher": "devflow",
+  "repository": {"type": "git", "url": "https://github.com/your-org/devflow"},
+  "license": "MIT",
+  "keywords": ["ai", "productivity", "context", "proxy", "continue", "cursor"],
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "devflow.generateSnapshot",
+        "title": "DevFlow: Generate Context Snapshot"
+      },
+      {
+        "command": "devflow.viewDashboard",
+        "title": "DevFlow: View Token Dashboard"
+      },
+      {
+        "command": "devflow.switchProvider",
+        "title": "DevFlow: Switch Active Provider"
+      },
+      {
+        "command": "devflow.getStarted",
+        "title": "DevFlow: Get Started"
+      },
+      {
+        "command": "devflow.addApiKey",
+        "title": "DevFlow: Add API Key"
+      },
+      {
+        "command": "devflow.startProxy",
+        "title": "DevFlow: Start Proxy"
+      },
+      {
+        "command": "devflow.stopProxy",
+        "title": "DevFlow: Stop Proxy"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "devflow.generateSnapshot",
+        "key": "ctrl+shift+d",
+        "mac": "cmd+shift+d",
+        "when": "editorTextFocus"
+      }
+    ],
+    "configuration": {
+      "title": "DevFlow AI",
+      "properties": {
+        "devflow.skipTypeCheck": {
+          "type": "boolean",
+          "default": false,
+          "description": "Skip TypeScript check during snapshot (faster on large projects, omits TS errors from context)"
+        },
+        "devflow.proxyPort": {
+          "type": "number",
+          "default": 8080,
+          "description": "Port for the local proxy server"
+        },
+        "devflow.contextOutputPath": {
+          "type": "string",
+          "default": "${workspaceFolder}/context.md",
+          "description": "Output path for context snapshot. Use ${workspaceFolder} for project root."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "cd .. && npm run build",
+    "vscode:prepublish": "npm run build && npm install && npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "setup": "npm run build && npm install && npm run compile",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^2.22.0",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "devflow-ai": "file:.."
+  }
+}

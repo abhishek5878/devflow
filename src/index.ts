@@ -6,7 +6,10 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import { getDefaultProviders } from './providers/index.js';
+import {
+  getDefaultProviders,
+  getAvailableProviders,
+} from './providers/index.js';
 import { proxyChatCompletion } from './proxy.js';
 import { getProviderStatus } from './providers/index.js';
 
@@ -109,7 +112,37 @@ app.get('/v1/health', (_req, res) => {
   res.json({ providers: status });
 });
 
-app.listen(PORT, () => {
+/**
+ * GET /status - VS Code extension status (active provider, token usage)
+ */
+app.get('/status', (_req, res) => {
+  const available = getAvailableProviders(providers, getProviderStatus);
+  const active = available[0];
+
+  const tokenUsage = active
+    ? {
+        provider: active.name,
+        used: active.tokens,
+        limit: active.limit,
+      }
+    : null;
+
+  res.json({
+    running: true,
+    activeProvider: active?.name ?? 'none',
+    tokenUsage,
+    providers: providers
+      .filter((p) => p.key && p.baseUrl)
+      .map((p) => ({
+        name: p.name,
+        tokens: p.tokens,
+        limit: p.limit === Infinity ? '∞' : p.limit,
+        available: getProviderStatus(p) !== 'exhausted',
+      })),
+  });
+});
+
+const server = app.listen(PORT, () => {
   console.log(`
 ┌─────────────────────────────────────────────────┐
 │  DevFlow AI - Local Proxy Router                │
@@ -120,4 +153,17 @@ app.listen(PORT, () => {
 │    ai.apiKey: devflow-local (or any key)       │
 └─────────────────────────────────────────────────┘
 `);
+});
+
+server.on('error', (err: NodeJS.ErrnoException) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`
+[DevFlow] Port ${PORT} is already in use. Either:
+  1. Stop the existing proxy: lsof -ti:${PORT} | xargs kill -9
+  2. Use a different port: DEVFLOW_PORT=8081 npm run dev
+`);
+  } else {
+    console.error('[DevFlow] Server error:', err.message);
+  }
+  process.exit(1);
 });

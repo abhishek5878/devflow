@@ -62,24 +62,41 @@ export async function scanGitHistory(
 
   try {
     const commitCount = getCommitCount(projectPath);
-    const effectiveLookback = Math.min(lookbackCommits, Math.max(0, commitCount));
     let changedFiles: string[] = [];
     let diffStat = '';
 
-    if (effectiveLookback > 0) {
-      const revRange = `HEAD~${effectiveLookback}..HEAD`;
-      const namesOutput = runGit(
-        projectPath,
-        `git diff --name-only ${revRange} 2>/dev/null`
-      );
-      changedFiles = namesOutput
-        ? namesOutput.split('\n').map((f) => f.trim()).filter(Boolean)
-        : [];
-
-      diffStat = runGit(
-        projectPath,
-        `git diff --stat ${revRange} 2>/dev/null`
-      );
+    if (commitCount > 0) {
+      // Single commit (root): use diff-tree; else use diff with parent range
+      if (commitCount === 1) {
+        const namesOutput = runGit(
+          projectPath,
+          'git log -1 --name-only --pretty=format: HEAD 2>/dev/null'
+        );
+        changedFiles = namesOutput
+          ? namesOutput.split('\n').map((f) => f.trim()).filter(Boolean)
+          : [];
+        diffStat = runGit(
+          projectPath,
+          'git log -1 --stat --pretty=format: HEAD 2>/dev/null'
+        );
+      } else {
+        const effectiveLookback = Math.min(
+          lookbackCommits,
+          Math.max(1, commitCount - 1)
+        );
+        const revRange = `HEAD~${effectiveLookback}..HEAD`;
+        const namesOutput = runGit(
+          projectPath,
+          `git diff --name-only ${revRange} 2>/dev/null`
+        );
+        changedFiles = namesOutput
+          ? namesOutput.split('\n').map((f) => f.trim()).filter(Boolean)
+          : [];
+        diffStat = runGit(
+          projectPath,
+          `git diff --stat ${revRange} 2>/dev/null`
+        );
+      }
     }
 
     // Recent commits (time-based)
@@ -128,7 +145,7 @@ export async function scanGitHistory(
 
     return {
       changedFiles,
-      diffStat: diffStat || (effectiveLookback === 0 ? 'No commits yet' : ''),
+      diffStat: diffStat || (commitCount === 0 ? 'No commits yet' : ''),
       recentCommits,
       uncommittedChanges,
       uncommittedDiffStat: uncommittedDiffStat || undefined,
