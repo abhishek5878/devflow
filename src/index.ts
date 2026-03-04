@@ -29,6 +29,11 @@ app.use((req, _res, next) => {
 });
 
 /**
+ * GET /favicon.ico - Avoid 404 when browser auto-requests it (icon is in HTML link)
+ */
+app.get('/favicon.ico', (_req, res) => res.status(204).end());
+
+/**
  * GET /v1/models - List models (required by some clients like Continue.dev)
  */
 app.get('/v1/models', (_req, res) => {
@@ -124,6 +129,7 @@ app.get('/dashboard', (_req, res) => {
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>DevFlow Dashboard</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230a0a0a'/><text x='16' y='22' font-size='18' font-weight='bold' fill='%2322c55e' text-anchor='middle'>D</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
