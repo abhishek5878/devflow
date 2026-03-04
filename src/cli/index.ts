@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * DevFlow AI - One command. Zero friction.
- * Usage: npx devflow
+ * Usage: npx abhishek5878/devflow
  *
  * Inspired by Claude Spend: no install, no sign-up, instant value.
  */
@@ -15,7 +15,7 @@ const args = process.argv.slice(2);
 if (args.includes('--help') || args.includes('-h')) {
   console.log(`DevFlow — Never lose your AI context when limits hit
 
-Usage: npx devflow
+Usage: npx abhishek5878/devflow
 
   Generates context.md and copies to clipboard. Paste into Claude.ai. Done.
 

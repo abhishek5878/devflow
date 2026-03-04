@@ -6,7 +6,7 @@ DevFlow has two modes—use one or both:
 
 | Use Case | Setup | How |
 |----------|-------|-----|
-| **Context recovery** (Cursor, Copilot, Claude Code, any AI) | **Zero** | Run `npx devflow` → paste into Claude.ai (copies to clipboard) |
+| **Context recovery** (Cursor, Copilot, Claude Code, any AI) | **Zero** | Run `npx abhishek5878/devflow` → paste into Claude.ai (copies to clipboard) |
 | **Proxy routing** (Continue.dev, Roo Code, Cline) | Add API key, start proxy | Auto-failover across Claude, GPT-4, Gemini when one hits limit |
 
 See [INSTALL.md](INSTALL.md) for step-by-step setup. Extension: Command Palette → **DevFlow: Get Started**.
@@ -107,7 +107,7 @@ At 90% capacity: warning logged. At 100%: automatic failover to next provider.
 Recovery tool for closed systems (Cursor, GitHub Copilot). Generate `context.md` for seamless handoff to any AI.
 
 ```bash
-npx devflow
+npx abhishek5878/devflow
 ```
 
 **Default:** Copies to clipboard. Paste into Claude.ai. Done.

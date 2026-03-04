@@ -12,6 +12,7 @@
     "devflow": "dist/cli/index.js"
   },
   "scripts": {
+    "prepare": "npm run build",
     "build": "tsc",
     "ext:setup": "npm run build && cd devflow-vscode && npm install && npm run compile",
     "test": "npm run build && npm run test:context && npm run test:ext && node scripts/test-landing.js",
