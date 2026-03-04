@@ -4,7 +4,7 @@
 
 **When Cursor, Claude Code, Copilot, or any AI hits a limit**, get back in seconds:
 
-1. **Run** `npx github:abhishek5878/devflow` (copies to clipboard)
+1. **Run** `npx github:abhishek5878/devflow` (copies to clipboard). Use `--target claude` or `--target cursor` for platform-specific paste hints.
 2. **Paste** into Claude.ai or any AI chat — resume exactly where you left off
 
 **No install. No API keys. No setup. Just works.** First run may take ~30s (npx installs deps).

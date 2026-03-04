@@ -81,6 +81,7 @@ function getStartedHtml(
 <h2>Context Snapshot (No setup)</h2>
 <p>Hit a limit in Cursor, Claude Code, or Copilot? Press <code>Cmd+Shift+D</code>. Paste into Claude.ai. Done.</p>
 <button class="btn" onclick="${run('devflow.generateSnapshot')}">Generate Context Now (Cmd+Shift+D)</button>
+<button class="btn btn-ghost" onclick="${run('devflow.copyAndOpenClaude')}">Copy & Open Claude</button>
 
 <h2>Proxy Routing (Continue.dev, Roo Code, Cline)</h2>
 <p><strong>One key is enough.</strong> DevFlow adds Ollama as free fallback when you run <code>ollama run llama3.2</code>.</p>
@@ -115,6 +116,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       'devflow.generateSnapshot',
       generateSnapshotCommand
     )
+  );
+
+  // Copy & open Claude.ai
+  context.subscriptions.push(
+    vscode.commands.registerCommand('devflow.copyAndOpenClaude', async () => {
+      await generateSnapshotCommand();
+      vscode.env.openExternal(vscode.Uri.parse('https://claude.ai/new'));
+    })
   );
 
   // Dashboard command

@@ -1,11 +1,14 @@
 /**
  * DevFlow AI - Context Markdown Generator
- * Assembles session context for AI handoff
+ * Follows community best practices: JLE handoff guide, claude-handoff, AGENTS.md patterns
+ * Optimized for paste-into-any-AI smoothness
  */
 
 import type { GitContext } from './git-scanner.js';
 import type { StackInfo } from './stack-detector.js';
 import type { ProjectRules } from './rules-detector.js';
+
+export type TargetPlatform = 'claude' | 'cursor' | 'continue' | 'universal';
 
 export interface ContextSnapshot {
   timestamp: string;
@@ -15,6 +18,10 @@ export interface ContextSnapshot {
   rules: ProjectRules | null;
   errors: string[];
   projectStructure?: string;
+}
+
+export interface GenerateOptions {
+  target?: TargetPlatform;
 }
 
 function inferWorkFocus(git: GitContext): string {
@@ -29,10 +36,31 @@ function inferWorkFocus(git: GitContext): string {
     );
     return Array.from(dirs).slice(0, 3).join(', ');
   }
-  return 'unknown';
+  return 'Continue the coding session';
 }
 
-export function generateContextMarkdown(snapshot: ContextSnapshot): string {
+/**
+ * Platform-specific paste hints (shown after copy, not in the document)
+ */
+export const PASTE_HINTS: Record<TargetPlatform, string> = {
+  claude: 'Claude.ai → New chat → Cmd+V (Mac) or Ctrl+V',
+  cursor: 'Cursor → New chat → Cmd+V (Mac) or Ctrl+V',
+  continue: 'Continue.dev → New chat → Cmd+V (Mac) or Ctrl+V',
+  universal:
+    'Paste anywhere: Claude.ai · Cursor · Continue.dev · any AI chat (Cmd/Ctrl+V)',
+};
+
+/**
+ * Generate handoff document per JLE / claude-handoff best practices:
+ * - Immediate next step, current status, constraints
+ * - Do not revisit (explicit), key decisions
+ * - Failed approaches (errors), structured for AI consumption
+ */
+export function generateContextMarkdown(
+  snapshot: ContextSnapshot,
+  options: GenerateOptions = {}
+): string {
+  const { target = 'universal' } = options;
   const {
     timestamp,
     projectName,
@@ -43,7 +71,8 @@ export function generateContextMarkdown(snapshot: ContextSnapshot): string {
     projectStructure,
   } = snapshot;
   const stackLine =
-    [stack.primary, stack.language].filter(Boolean).join(' + ') || 'Unknown';
+    [stack.primary, stack.language, stack.database].filter(Boolean).join(' + ') ||
+    'Unknown';
   const focus = inferWorkFocus(git);
 
   const changedSection =
@@ -66,18 +95,23 @@ export function generateContextMarkdown(snapshot: ContextSnapshot): string {
 
   const rulesSection = rules
     ? `\nSource: ${rules.source}\n\n${rules.content}`
-    : 'No project rules detected';
+    : 'None detected';
 
   const errorsSection =
-    errors.length > 0 ? errors.join('\n\n') : 'No recent errors detected';
+    errors.length > 0 ? errors.join('\n\n') : 'None detected';
 
-  return `## DevFlow Session Handoff
-Generated: ${timestamp}
-Project: ${projectName}
-Stack: ${stackLine}
+  return `# Session Handoff — ${projectName}
 
-## Files Changed This Session
-${changedSection}
+> Paste this entire document into a new AI chat to continue. (DevFlow ${timestamp})
+
+---
+
+## Immediate Next Step
+${focus}
+
+## Current Status
+- **Stack:** ${stackLine}
+- **Files changed:** ${changedSection}
 
 ## Recent Git Activity
 ${gitActivity}
@@ -86,16 +120,15 @@ ${gitActivity}
 ${changeSummaryText}
 ${projectStructure ? `\n## Project Structure\n${projectStructure}\n` : ''}
 
-## Active Project Rules
+## Constraints & Project Rules
 ${rulesSection}
 
-## Known Errors
+## Known Errors / Failed Approaches
 ${errorsSection}
 
-## For the Next AI
-You are continuing an active coding session. Review the changed files first.
-The developer was working on: ${focus}.
-
-**Do not re-explain what was already built. Ask what they need next.**
-`;
+## Do Not Revisit
+- Do not re-explain what was already built
+- Do not suggest starting over — continue from current state
+- Ask what the developer needs next
+`.trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 }

@@ -57,6 +57,14 @@ export function getDefaultProviders(env: NodeJS.ProcessEnv): ProviderConfig[] {
       model: 'gemini-2.0-flash',
     },
     {
+      name: 'openclaw',
+      key: 'openclaw',
+      tokens: 0,
+      limit: Infinity,
+      baseUrl: env.DEVFLOW_OPENCLAW_URL || 'http://localhost:18789/v1',
+      model: env.DEVFLOW_OPENCLAW_MODEL || 'openclaw-default',
+    },
+    {
       name: 'ollama',
       key: 'ollama',
       tokens: 0,

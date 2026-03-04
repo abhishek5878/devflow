@@ -48,15 +48,27 @@ export async function generateSnapshotCommand(): Promise<void> {
           projectPath
         );
 
+        const target = config.get<'claude' | 'cursor' | 'continue' | 'universal'>(
+          'pasteTarget',
+          'universal'
+        );
         const { path: resultPath } = await generateSnapshot(projectPath, {
           skipTypeCheck,
           outputPath,
+          target,
         });
 
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        const pasteHints: Record<string, string> = {
+          claude: 'Claude.ai → New chat → Cmd+V (Mac) or Ctrl+V',
+          cursor: 'Cursor → New chat → Cmd+V (Mac) or Ctrl+V',
+          continue: 'Continue.dev → New chat → Cmd+V (Mac) or Ctrl+V',
+          universal: 'Paste anywhere: Claude.ai · Cursor · Continue.dev (Cmd/Ctrl+V)',
+        };
+        const hint = pasteHints[target] || pasteHints.universal;
 
         const action = await vscode.window.showInformationMessage(
-          `✓ context.md generated (${elapsed}s) — paste into Claude.ai to resume`,
+          `✓ context.md generated (${elapsed}s) — ${hint}`,
           'Open File',
           'Copy to Clipboard'
         );
@@ -68,7 +80,7 @@ export async function generateSnapshotCommand(): Promise<void> {
           const content = readFileSync(resultPath, 'utf-8');
           await vscode.env.clipboard.writeText(content);
           vscode.window.showInformationMessage(
-            'DevFlow: Copied context.md to clipboard'
+            `DevFlow: Copied. ${hint}`
           );
         }
       } catch (err) {

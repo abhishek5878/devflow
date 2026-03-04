@@ -13,23 +13,28 @@ import { captureRecentErrors } from '../context/error-detector.js';
 import { getProjectStructure } from '../context/structure-scanner.js';
 import { generateContextMarkdown } from '../context/generator.js';
 
+import type { TargetPlatform } from '../context/generator.js';
+
 export interface SnapshotOptions {
   skipTypeCheck?: boolean;
   outputPath?: string;
   /** Minimal output (for npx devflow default flow) */
   quiet?: boolean;
+  /** Target platform for format/paste hints */
+  target?: TargetPlatform;
 }
 
 export interface SnapshotResult {
   path: string;
   wasGitRepo: boolean;
+  target?: TargetPlatform;
 }
 
 export async function generateSnapshot(
   projectPath: string = process.cwd(),
   options: SnapshotOptions = {}
 ): Promise<SnapshotResult> {
-  const { skipTypeCheck = false, outputPath: customOutput, quiet } = options;
+  const { skipTypeCheck = false, outputPath: customOutput, quiet, target } = options;
   const startTime = Date.now();
 
   if (!quiet) console.log('🔍 Scanning project context...\n');
@@ -53,7 +58,7 @@ export async function generateSnapshot(
     projectStructure: projectStructure || undefined,
   };
 
-  const markdown = generateContextMarkdown(snapshot);
+  const markdown = generateContextMarkdown(snapshot, { target });
   const outputPath = customOutput ?? `${projectPath}/context.md`;
 
   await writeFile(outputPath, markdown);
@@ -82,5 +87,5 @@ export async function generateSnapshot(
     console.log(`📄 ${outputPath}\n`);
   }
 
-  return { path: outputPath, wasGitRepo };
+  return { path: outputPath, wasGitRepo, target };
 }

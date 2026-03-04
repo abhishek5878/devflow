@@ -66,12 +66,21 @@ async function generateSnapshotCommand() {
             const skipTypeCheck = config.get('skipTypeCheck', false);
             const outputPathTemplate = config.get('contextOutputPath', '${workspaceFolder}/context.md');
             const outputPath = outputPathTemplate.replace('${workspaceFolder}', projectPath);
+            const target = config.get('pasteTarget', 'universal');
             const { path: resultPath } = await generateSnapshot(projectPath, {
                 skipTypeCheck,
                 outputPath,
+                target,
             });
             const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-            const action = await vscode.window.showInformationMessage(`✓ context.md generated (${elapsed}s) — paste into Claude.ai to resume`, 'Open File', 'Copy to Clipboard');
+            const pasteHints = {
+                claude: 'Claude.ai → New chat → Cmd+V (Mac) or Ctrl+V',
+                cursor: 'Cursor → New chat → Cmd+V (Mac) or Ctrl+V',
+                continue: 'Continue.dev → New chat → Cmd+V (Mac) or Ctrl+V',
+                universal: 'Paste anywhere: Claude.ai · Cursor · Continue.dev (Cmd/Ctrl+V)',
+            };
+            const hint = pasteHints[target] || pasteHints.universal;
+            const action = await vscode.window.showInformationMessage(`✓ context.md generated (${elapsed}s) — ${hint}`, 'Open File', 'Copy to Clipboard');
             if (action === 'Open File') {
                 const doc = await vscode.workspace.openTextDocument(resultPath);
                 await vscode.window.showTextDocument(doc);
@@ -79,7 +88,7 @@ async function generateSnapshotCommand() {
             else if (action === 'Copy to Clipboard') {
                 const content = (0, fs_1.readFileSync)(resultPath, 'utf-8');
                 await vscode.env.clipboard.writeText(content);
-                vscode.window.showInformationMessage('DevFlow: Copied context.md to clipboard');
+                vscode.window.showInformationMessage(`DevFlow: Copied. ${hint}`);
             }
         }
         catch (err) {

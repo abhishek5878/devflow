@@ -7,7 +7,7 @@ import { join } from 'path';
 
 const html = readFileSync(join(process.cwd(), 'landing/index.html'), 'utf-8');
 const checks = [
-  { name: 'npx command', pattern: /npx abhishek5878\/devflow/ },
+  { name: 'npx command', pattern: /npx github:abhishek5878\/devflow/ },
   { name: 'Claude.ai mention', pattern: /Claude\.ai/ },
   { name: 'Copy button', pattern: /Copy|copy/ },
   { name: 'Who this is for', pattern: /Who this is for/ },

@@ -12,6 +12,7 @@ process.stdout.write('DevFlow — starting...\n');
 import { resolve } from 'path';
 import { readFileSync } from 'fs';
 import { generateSnapshot } from './snapshot.js';
+import { PASTE_HINTS } from '../context/generator.js';
 
 const args = process.argv.slice(2);
 
@@ -26,6 +27,7 @@ Options:
   --no-copy    Don't copy to clipboard (just write file)
   --open       Open context.md after generating
   --skip-tsc   Skip TypeScript check (faster)
+  --target X   Paste hint: claude | cursor | continue | universal
   --output path  Custom output path
 `);
   process.exit(0);
@@ -34,6 +36,11 @@ Options:
 const copyToClipboard = !args.includes('--no-copy') && !args.includes('snapshot');
 const openFile = args.includes('--open');
 const skipTsc = args.includes('--skip-tsc');
+const targetIdx = args.indexOf('--target');
+const targetArg =
+  targetIdx >= 0 && args[targetIdx + 1]
+    ? (args[targetIdx + 1] as 'claude' | 'cursor' | 'continue' | 'universal')
+    : undefined;
 const outIdx = args.indexOf('--output');
 const outputPath =
   outIdx >= 0 && args[outIdx + 1]
@@ -43,7 +50,8 @@ const pathArg = args.filter(
   (a, i) =>
     !a.startsWith('-') &&
     !['snapshot'].includes(a) &&
-    i !== outIdx + 1
+    i !== outIdx + 1 &&
+    i !== targetIdx + 1
 )[0];
 
 const projectPath = pathArg ? resolve(process.cwd(), pathArg) : process.cwd();
@@ -56,10 +64,11 @@ async function main() {
     process.stdout.write('DevFlow — scanning...\n');
   }
 
-  const { path: resultPath, wasGitRepo } = await generateSnapshot(projectPath, {
+  const { path: resultPath, wasGitRepo, target: usedTarget } = await generateSnapshot(projectPath, {
     skipTypeCheck: skipTsc,
     outputPath,
     quiet: copyToClipboard,
+    target: targetArg,
   });
 
   const content = readFileSync(resultPath, 'utf-8');
@@ -68,7 +77,9 @@ async function main() {
     try {
       const { default: clipboard } = await import('clipboardy');
       await clipboard.write(content);
-      console.log('\n✓ Copied to clipboard. Paste into Claude.ai to resume.\n');
+      const hint = PASTE_HINTS[usedTarget || 'universal'];
+      console.log('\n✓ Copied to clipboard.');
+      console.log(`  ${hint}\n`);
       if (!wasGitRepo) {
         console.log('  Tip: Run from a git project root for fuller context.\n');
       }

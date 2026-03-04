@@ -113,7 +113,7 @@ npx github:abhishek5878/devflow
 
 **Default:** Copies to clipboard. Paste into Claude.ai. Done.
 
-**Options:** `--no-copy` (just write file), `--skip-tsc` (faster on large TS projects), `--output path` (custom output)
+**Options:** `--no-copy`, `--skip-tsc`, `--target claude|cursor|continue` (paste hint), `--output path`
 
 **Output:** Git history, stack detection, project rules, "For the Next AI" handoff. One command. Zero friction.
 

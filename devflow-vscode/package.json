@@ -50,6 +50,10 @@
       {
         "command": "devflow.openDashboard",
         "title": "DevFlow: Open Dashboard in Browser"
+      },
+      {
+        "command": "devflow.copyAndOpenClaude",
+        "title": "DevFlow: Copy Context & Open Claude"
       }
     ],
     "keybindings": [
@@ -77,6 +81,12 @@
           "type": "string",
           "default": "${workspaceFolder}/context.md",
           "description": "Output path for context snapshot. Use ${workspaceFolder} for project root."
+        },
+        "devflow.pasteTarget": {
+          "type": "string",
+          "default": "universal",
+          "enum": ["claude", "cursor", "continue", "universal"],
+          "description": "Target AI for paste hints: claude, cursor, continue, or universal"
         }
       }
     }
