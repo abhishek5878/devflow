@@ -4,7 +4,7 @@
 
 **When Cursor, Claude Code, Copilot, or any AI hits a limit**, get back in seconds:
 
-1. **Run** `npx abhishek5878/devflow` (copies to clipboard)
+1. **Run** `npx github:abhishek5878/devflow` (copies to clipboard)
 2. **Paste** into Claude.ai or any AI chat — resume exactly where you left off
 
 **No install. No API keys. No setup. Just works.** First run may take ~30s (npx installs deps).
@@ -55,3 +55,4 @@ After starting the proxy, click **Connect AI Tool** in the notification, or run 
 - Command Palette → **"DevFlow: Get Started"** for the full guide
 - Status bar shows proxy status — click to open dashboard
 - **Port in use?** Run `lsof -ti:8080 | xargs kill -9` or change port in settings
+- **npx nothing happens?** Try `npx github:abhishek5878/devflow` (explicit). Or `DEVFLOW_DEBUG=1 npx ...` to see errors.

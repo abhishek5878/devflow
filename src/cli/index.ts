@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 /**
  * DevFlow AI - One command. Zero friction.
- * Usage: npx abhishek5878/devflow
+ * Usage: npx abhishek5878/devflow or npx devflow-ai (when installed)
  *
  * Inspired by Claude Spend: no install, no sign-up, instant value.
  */
+
+// Immediate feedback so user knows the CLI started (especially on slow npx first run)
+process.stdout.write('DevFlow — starting...\n');
 
 import { resolve } from 'path';
 import { readFileSync } from 'fs';
@@ -15,7 +18,7 @@ const args = process.argv.slice(2);
 if (args.includes('--help') || args.includes('-h')) {
   console.log(`DevFlow — Never lose your AI context when limits hit
 
-Usage: npx abhishek5878/devflow
+Usage: npx github:abhishek5878/devflow
 
   Generates context.md and copies to clipboard. Paste into Claude.ai. Done.
 
@@ -49,6 +52,8 @@ async function main() {
   // Instant feedback - user sees something immediately
   if (copyToClipboard) {
     process.stdout.write('DevFlow — scanning project...\n');
+  } else {
+    process.stdout.write('DevFlow — scanning...\n');
   }
 
   const { path: resultPath, wasGitRepo } = await generateSnapshot(projectPath, {
@@ -98,6 +103,9 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error(err.message);
+  console.error('DevFlow error:', err.message);
+  if (process.env.DEVFLOW_DEBUG) {
+    console.error(err.stack);
+  }
   process.exit(1);
 });

@@ -1,0 +1,18 @@
+{
+  "name": "devflow-openclaw",
+  "version": "0.1.0",
+  "description": "DevFlow context snapshot and proxy tools for OpenClaw",
+  "type": "module",
+  "openclaw": {
+    "extensions": ["./index.ts"]
+  },
+  "peerDependencies": {
+    "openclaw": "*"
+  },
+  "dependencies": {
+    "devflow-ai": "file:.."
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

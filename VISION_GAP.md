@@ -57,6 +57,12 @@ DevFlow’s Context Engine (git + stack + rules + errors → context.md) is the 
 | **Progressive nudges** | 90% → "Add API Key" in status bar toast; dashboard nudge banner |
 | **Roo/Cline** | "Copy Manual Config" button with Base URL + API Key |
 
+## OpenClaw Integration
+
+| Feature | Status |
+|---------|--------|
+| **DevFlow OpenClaw plugin** | ✓ `openclaw-devflow/` — registers `devflow_context_snapshot` tool for AI handoff from OpenClaw agent |
+
 ## Next Priorities (To Match Vision)
 
 1. **Ollama as free fallback** — ✓ Done.
