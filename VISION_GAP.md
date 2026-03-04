@@ -32,7 +32,7 @@ Aligned to your concept docs (AI Coding Assistant Aggregator + DevFlow AI).
 | Amazon Q as always-free fallback | Placeholder | Needs AWS Builder ID integration |
 | Codeium as always-free fallback | Placeholder | Needs Codeium API integration |
 | One-key + free fallbacks = unlimited | Works with Ollama | Add `ollama run llama3.2` for local fallback |
-| Progressive key nudges | Not built | "Add GPT-4 for stronger fallback" toasts |
+| Progressive key nudges | ✓ Built | 90% → "Add API Key" in status bar + dashboard nudge |
 | Session history (searchable context.md) | Not built | Pro tier feature |
 
 ## Core Insight (From Your Docs)
@@ -40,6 +40,22 @@ Aligned to your concept docs (AI Coding Assistant Aggregator + DevFlow AI).
 > "The routing is a utility. The context is the product."
 
 DevFlow’s Context Engine (git + stack + rules + errors → context.md) is the moat. The proxy is the enabler for open-API tools. Both exist and work.
+
+## UX Improvements (Shipped)
+
+| Area | Change |
+|------|--------|
+| **Landing** | Two paths: "Just need context recovery?" vs "Need proxy routing?" — primary CTA = Copy & Try |
+| **Landing** | First-run note: npx may take ~30s |
+| **Landing** | GitHub stars badge (social proof) |
+| **Get Started** | Cmd+Shift+D on button, progress checkmarks, Refresh button |
+| **Get Started** | Unified theme: Inter font, dark vars (matches landing) |
+| **Dashboard** | Auto-refresh every 10s, Last updated; Inter + design tokens |
+| **Key add** | Follow-up: "Start Proxy" action after saving key |
+| **Exhausted** | Clearer Ollama tip: "Open a new terminal and run: ollama run llama3.2" |
+| **Snapshot** | No-workspace: "Open a folder first: File → Open Folder" |
+| **Progressive nudges** | 90% → "Add API Key" in status bar toast; dashboard nudge banner |
+| **Roo/Cline** | "Copy Manual Config" button with Base URL + API Key |
 
 ## Next Priorities (To Match Vision)
 

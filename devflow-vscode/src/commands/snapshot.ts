@@ -12,7 +12,7 @@ export async function generateSnapshotCommand(): Promise<void> {
 
   if (!workspaceFolder) {
     vscode.window.showErrorMessage(
-      'DevFlow: No workspace folder open. Open a project first.'
+      'DevFlow: No workspace folder open. Open a folder first: File → Open Folder.'
     );
     return;
   }

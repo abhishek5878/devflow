@@ -31,7 +31,8 @@ export async function proxyChatCompletion(
   const available = getAvailableProviders(providers, getProviderStatus);
 
   if (available.length === 0) {
-    const ollamaTip = ' Run `ollama run llama3.2` for a free local fallback.';
+    const ollamaTip =
+      ' Open a new terminal and run: ollama run llama3.2 (free local fallback).';
     throw new Error(
       'All providers exhausted. Add API keys or wait for reset.' + ollamaTip
     );

@@ -113,16 +113,26 @@ async function connectContinueCommand() {
         return;
     const result = await tryConnect(pick.path, pick.label);
     if (result.ok) {
-        let msg = `✓ Config written. Restart ${pick.label} (or reload window), then select "DevFlow Router" from the model dropdown.`;
-        if (pick.label !== 'Continue.dev') {
-            msg += ` If your tool ignores this file, set Base URL to http://localhost:${port}/v1 and API Key to devflow-local in its settings.`;
+        let msg = `✓ Config written to ${pick.path}. Restart ${pick.label} (or reload window), then select "DevFlow Router" from the model dropdown.`;
+        const manualConfig = pick.label === 'Continue.dev'
+            ? null
+            : `Base URL: http://localhost:${port}/v1\nAPI Key: devflow-local`;
+        if (manualConfig) {
+            msg += ` If it doesn't appear, add Base URL and API Key manually in the tool's settings.`;
         }
-        const action = await vscode.window.showInformationMessage(msg, 'Reload Window', 'Open Dashboard');
+        const actions = ['Reload Window', 'Open Dashboard'];
+        if (manualConfig)
+            actions.push('Copy Manual Config');
+        const action = await vscode.window.showInformationMessage(msg, ...actions);
         if (action === 'Reload Window') {
             vscode.commands.executeCommand('workbench.action.reloadWindow');
         }
         else if (action === 'Open Dashboard') {
             vscode.commands.executeCommand('devflow.openDashboard');
+        }
+        else if (action === 'Copy Manual Config' && manualConfig) {
+            vscode.env.clipboard.writeText(manualConfig);
+            vscode.window.showInformationMessage('Copied. Paste Base URL and API Key into your AI tool settings.');
         }
     }
     else {

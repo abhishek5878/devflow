@@ -7,7 +7,7 @@
 1. **Run** `npx abhishek5878/devflow` (copies to clipboard)
 2. **Paste** into Claude.ai or any AI chat — resume exactly where you left off
 
-**No install. No API keys. No setup. Just works.**
+**No install. No API keys. No setup. Just works.** First run may take ~30s (npx installs deps).
 
 Using the extension? Press `Cmd+Shift+D` (Mac) or `Ctrl+Shift+D` (Windows) instead.
 

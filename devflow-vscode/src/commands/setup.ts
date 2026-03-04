@@ -33,9 +33,13 @@ export async function addApiKeyCommand(context: vscode.ExtensionContext): Promis
   if (!key?.trim()) return;
 
   await context.secrets.store(provider.key, key.trim());
-  vscode.window.showInformationMessage(
-    `✓ ${provider.label} key saved. Start the proxy to use it.`
+  const action = await vscode.window.showInformationMessage(
+    `✓ ${provider.label} key saved. Start the proxy to use it.`,
+    'Start Proxy'
   );
+  if (action === 'Start Proxy') {
+    vscode.commands.executeCommand('devflow.startProxy');
+  }
 }
 
 export async function getStoredKeys(context: vscode.ExtensionContext): Promise<Record<string, string>> {

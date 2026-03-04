@@ -44,7 +44,7 @@ const path_1 = require("path");
 async function generateSnapshotCommand() {
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
     if (!workspaceFolder) {
-        vscode.window.showErrorMessage('DevFlow: No workspace folder open. Open a project first.');
+        vscode.window.showErrorMessage('DevFlow: No workspace folder open. Open a folder first: File → Open Folder.');
         return;
     }
     const projectPath = workspaceFolder.uri.fsPath;

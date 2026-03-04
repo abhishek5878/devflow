@@ -26,3 +26,6 @@ jobs:
 
       - name: Test (build, context, extension, proxy, client)
         run: bash scripts/test-all.sh
+
+      - name: User flow test
+        run: bash scripts/test-user-flow.sh

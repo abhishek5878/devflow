@@ -48,6 +48,16 @@
       cursor: pointer;
     }
     .btn:hover { opacity: 0.9; }
+    .btn-secondary { background: transparent; color: var(--accent); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--surface); }
+    .path-chooser { margin: 32px 0; text-align: left; }
+    .path-label { font-size: 0.9rem; color: var(--muted); margin-bottom: 16px; }
+    .path-cards { display: flex; flex-direction: column; gap: 20px; }
+    .path-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+    .path-card-primary { border-color: var(--accent); }
+    .path-card strong { display: block; margin-bottom: 8px; }
+    .path-card p { font-size: 0.95rem; color: var(--muted); margin-bottom: 16px; }
+    .path-card .cmd { margin-bottom: 16px; }
     section { padding: 56px 0; border-top: 1px solid var(--border); }
     h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 24px; }
     .step { display: flex; gap: 16px; margin-bottom: 24px; }
@@ -73,16 +83,35 @@
 <body>
   <header class="hero">
     <div class="wrap">
-      <p class="badge">Open Source · Free Forever</p>
+      <p class="badge">
+        <a href="https://github.com/abhishek5878/devflow" style="color:inherit;text-decoration:none">
+          <img src="https://img.shields.io/github/stars/abhishek5878/devflow?style=social" alt="GitHub stars" style="vertical-align:middle;height:20px">
+        </a>
+        · Open Source · Free Forever
+      </p>
       <h1>You hit your AI limit.<br>You lose context. Again.</h1>
-      <p class="hero-sub">Type one command. Context copied. Paste into Claude.ai. Resume in seconds.</p>
-      <code class="cmd">npx abhishek5878/devflow</code>
-      <a href="https://github.com/abhishek5878/devflow" class="btn">View on GitHub</a>
-      <p class="pills">
+      <p class="hero-sub">One command. Context copied. Paste into Claude.ai. Resume in seconds.</p>
+      <div class="path-chooser">
+        <p class="path-label">Which fits you?</p>
+        <div class="path-cards">
+          <div class="path-card path-card-primary">
+            <strong>Just need context recovery?</strong>
+            <p>Cursor, Claude Code, Copilot — no setup. Run, paste, resume.</p>
+            <code class="cmd">npx abhishek5878/devflow</code>
+            <button class="btn btn-primary" onclick="const c='npx abhishek5878/devflow';navigator.clipboard.writeText(c).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2e3)})">Copy & Try</button>
+          </div>
+          <div class="path-card">
+            <strong>Need proxy routing?</strong>
+            <p>Continue.dev, Roo Code, Cline — VS Code extension, one-click connect, auto-failover.</p>
+            <a href="https://github.com/abhishek5878/devflow#phase-3-vs-code-extension" class="btn btn-secondary">Get Extension</a>
+          </div>
+        </div>
+      </div>
+      <p class="pills" style="margin-top:24px">
         <span class="pill"><strong>100% local</strong></span>
         <span class="pill"><strong>Zero config</strong></span>
         <span class="pill"><strong>No data sent</strong></span>
-        <span class="pill"><strong>Open source</strong></span>
+        <a href="https://github.com/abhishek5878/devflow" style="color:inherit;text-decoration:none"><span class="pill"><strong>GitHub</strong></span></a>
       </p>
     </div>
   </header>
@@ -141,6 +170,7 @@
     <div class="wrap">
       <h2>Try it now</h2>
       <p>Open a terminal in your project. Paste the command. Done.</p>
+      <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 12px;">First run may take ~30s (npx installs deps).</p>
       <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
         <code class="cmd" style="margin-bottom: 0;">npx abhishek5878/devflow</code>
         <button class="btn" onclick="navigator.clipboard.writeText('npx abhishek5878/devflow').then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2e3)})">Copy</button>

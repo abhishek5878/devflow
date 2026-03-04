@@ -92,7 +92,7 @@ app.post('/v1/chat/completions', async (req, res) => {
     const status = proxyErr.status || 500;
     let message = proxyErr.message || 'Internal server error';
     if (message.includes('All providers exhausted')) {
-      message += ` See dashboard: http://localhost:${PORT}/dashboard`;
+      message += ` Dashboard: http://localhost:${PORT}/dashboard`;
     }
     console.error(`[DevFlow] Error (${proxyErr.provider || 'unknown'}):`, message);
     res.status(status).json({
@@ -121,34 +121,57 @@ app.get('/v1/health', (_req, res) => {
 app.get('/dashboard', (_req, res) => {
   res.setHeader('Content-Type', 'text/html');
   res.send(`<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><title>DevFlow Dashboard</title>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DevFlow Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-body{font-family:system-ui,sans-serif;margin:24px;background:#0a0a0a;color:#fafafa}
-h1{font-size:1.5rem}
+:root{--bg:#0a0a0a;--surface:#141414;--text:#fafafa;--muted:#737373;--accent:#22c55e;--border:#262626}
+*{box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;margin:24px;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+h1{font-size:1.5rem;font-weight:600}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+code{background:var(--surface);padding:2px 6px;border-radius:4px;font-size:0.9em}
 table{border-collapse:collapse;width:100%;max-width:480px}
-th,td{padding:10px 16px;text-align:left;border-bottom:1px solid #262626}
-th{color:#a1a1aa}
-.ok{color:#22c55e}.full{color:#ef4444}.warn{color:#f59e0b}
+th,td{padding:10px 16px;text-align:left;border-bottom:1px solid var(--border)}
+th{color:var(--muted);font-weight:500}
+.ok{color:var(--accent)}.full{color:#ef4444}.warn{color:#f59e0b}
 </style>
 </head>
 <body>
 <h1>DevFlow Token Dashboard</h1>
-<p><a href="/status" style="color:#22c55e">/status</a> &middot; Proxy: <code>http://localhost:${PORT}/v1</code></p>
+<p><a href="/status">/status</a> &middot; Proxy: <code>http://localhost:${PORT}/v1</code></p>
 <table><thead><tr><th>Provider</th><th>Used</th><th>Limit</th><th>Status</th></tr></thead>
 <tbody id="t"></tbody></table>
+<p id="updated" style="font-size:12px;color:#737373;margin-top:12px">Last updated: —</p>
+<div id="nudge" style="display:none;margin-top:16px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:13px"></div>
 <script>
-fetch('/status').then(r=>r.json()).then(d=>{
-  const t=d.providers||[];
-  document.getElementById('t').innerHTML=t.map(p=>{
-    const u=p.tokens/1000|0;
-    const lim=p.limit==='∞'?p.limit:(p.limit/1000|0)+'k';
-    const pct=p.limit==='∞'?'—':((p.tokens/p.limit)*100|0)+'%';
-    const s=p.available?'ok':'full';
-    const c=s==='ok'?(pct!=='—'&&pct>90?'warn':'ok'):'full';
-    return '<tr><td>'+p.name+'</td><td>'+u+'k</td><td>'+lim+'</td><td class="'+c+'">'+(s==='ok'?pct+' ✓':'Exhausted')+'</td></tr>';
-  }).join('')||'<tr><td colspan="4">No providers. Add API keys and restart proxy.</td></tr>';
-}).catch(()=>{document.getElementById('t').innerHTML='<tr><td colspan="4">Proxy not responding. Start with: DevFlow: Start Proxy</td></tr>';});
+function refresh(){
+  fetch('/status').then(r=>r.json()).then(d=>{
+    const t=d.providers||[];
+    let nearLimit=false;
+    document.getElementById('t').innerHTML=t.map(p=>{
+      const u=p.tokens/1000|0;
+      const lim=p.limit==='∞'?p.limit:(p.limit/1000|0)+'k';
+      const pct=p.limit==='∞'?'—':((p.tokens/p.limit)*100|0)+'%';
+      const s=p.available?'ok':'full';
+      const c=s==='ok'?(pct!=='—'&&pct>90?'warn':'ok'):'full';
+      if(pct!=='—'&&p.tokens/p.limit>0.9)nearLimit=true;
+      return '<tr><td>'+p.name+'</td><td>'+u+'k</td><td>'+lim+'</td><td class="'+c+'">'+(s==='ok'?pct+' ✓':'Exhausted')+'</td></tr>';
+    }).join('')||'<tr><td colspan="4">No providers. Add API keys and restart proxy.</td></tr>';
+    document.getElementById('updated').textContent='Last updated: just now';
+    const n=document.getElementById('nudge');
+    if(nearLimit){n.style.display='block';n.innerHTML='⚠️ Provider near limit. Add another API key for stronger fallback: <strong>DevFlow: Add API Key</strong> in Command Palette.';}else{n.style.display='none';}
+  }).catch(()=>{
+    document.getElementById('t').innerHTML='<tr><td colspan="4">Proxy not responding. Start with: DevFlow: Start Proxy</td></tr>';
+    document.getElementById('updated').textContent='Last updated: error';
+    document.getElementById('nudge').style.display='none';
+  });
+}
+refresh();
+setInterval(refresh,10000);
 </script>
 </body>
 </html>`);

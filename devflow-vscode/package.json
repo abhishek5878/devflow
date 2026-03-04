@@ -1,7 +1,7 @@
 {
   "name": "devflow",
   "displayName": "DevFlow AI",
-  "description": "Never lose your AI coding session again",
+  "description": "Never lose your AI coding session again. Context snapshot (Cmd+Shift+D) + proxy with auto-failover.",
   "version": "0.1.0",
   "publisher": "devflow",
   "repository": {"type": "git", "url": "https://github.com/abhishek5878/devflow"},

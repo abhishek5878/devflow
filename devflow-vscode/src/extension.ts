@@ -10,40 +10,69 @@ import { startProxyCommand, stopProxyCommand } from './commands/proxy';
 import { DashboardPanel } from './dashboard/panel';
 import { addApiKeyCommand } from './commands/setup';
 import { connectContinueCommand } from './commands/connect';
+import { hasAnyKeys } from './commands/setup';
 
 let statusBar: DevFlowStatusBar | undefined;
 
-function showGetStarted(context: vscode.ExtensionContext): void {
+async function showGetStarted(context: vscode.ExtensionContext): Promise<void> {
+  const port = vscode.workspace.getConfiguration('devflow').get<number>('proxyPort', 8080);
+  const hasKeys = await hasAnyKeys(context);
+  let proxyRunning = false;
+  try {
+    const ac = new AbortController();
+    setTimeout(() => ac.abort(), 800);
+    const res = await fetch(`http://localhost:${port}/status`, { signal: ac.signal });
+    if (res.ok) proxyRunning = true;
+  } catch { /* not running */ }
+
   const panel = vscode.window.createWebviewPanel(
     'devflowGetStarted',
     'DevFlow: Get Started',
     vscode.ViewColumn.One,
     { enableScripts: true }
   );
-  panel.webview.html = getStartedHtml(panel.webview);
-  panel.webview.onDidReceiveMessage((msg) => {
+  panel.webview.html = getStartedHtml(panel.webview, { hasKeys, proxyRunning });
+  panel.webview.onDidReceiveMessage(async (msg) => {
     if (msg.command === 'run') {
       vscode.commands.executeCommand(msg.id);
+    }
+    if (msg.command === 'refresh') {
+      panel.dispose();
+      await showGetStarted(context);
     }
   });
 }
 
-function getStartedHtml(webview: vscode.Webview): string {
+function getStartedHtml(
+  webview: vscode.Webview,
+  state: { hasKeys: boolean; proxyRunning: boolean }
+): string {
   const run = (cmd: string) => `runCommand('${cmd}')`;
+  const s1 = state.hasKeys ? ' ✓' : '';
+  const s2 = state.proxyRunning ? ' ✓' : '';
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <style>
-  body{font-family:var(--vscode-font-family);padding:24px;line-height:1.6;max-width:560px}
-  code{background:var(--vscode-textBlockQuote-background);padding:2px 6px;border-radius:4px}
-  h2{margin-top:28px;margin-bottom:8px}
-  .btn{display:inline-block;background:var(--vscode-button-background);color:var(--vscode-button-foreground);
-    padding:8px 16px;border-radius:4px;cursor:pointer;margin:4px 8px 4px 0;font-size:13px;border:none}
+  :root{--bg:#0a0a0a;--surface:#141414;--text:#fafafa;--muted:#737373;--accent:#22c55e;--border:#262626}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);padding:24px;line-height:1.6;max-width:560px;-webkit-font-smoothing:antialiased}
+  code{background:var(--surface);color:var(--accent);padding:2px 6px;border-radius:4px;font-size:0.9em}
+  h1{font-size:1.5rem;margin-bottom:20px}
+  h2{margin-top:28px;margin-bottom:8px;font-size:1.1rem}
+  .btn{display:inline-block;background:var(--accent);color:var(--bg);padding:8px 16px;border-radius:6px;
+    cursor:pointer;margin:4px 8px 4px 0;font-size:13px;font-weight:600;border:none;text-decoration:none}
   .btn:hover{opacity:0.9}
-  .tip{background:var(--vscode-textBlockQuote-background);padding:12px 16px;border-radius:6px;margin:16px 0;font-size:14px}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+  .tip{background:var(--surface);border:1px solid var(--border);padding:12px 16px;border-radius:8px;margin:16px 0;font-size:14px;color:var(--muted)}
+  .tip strong{color:var(--text)}
   .steps{list-style:none;padding:0}
   .steps li{margin:12px 0;padding-left:24px;position:relative}
-  .steps li::before{content:"→";position:absolute;left:0;color:var(--vscode-textLink-foreground)}
+  .steps li::before{content:"→";position:absolute;left:0;color:var(--accent)}
+  .done{color:var(--accent)}
+  hr{border:none;border-top:1px solid var(--border);margin:24px 0}
+  .muted{font-size:12px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -51,14 +80,14 @@ function getStartedHtml(webview: vscode.Webview): string {
 
 <h2>Context Snapshot (No setup)</h2>
 <p>Hit a limit in Cursor, Claude Code, or Copilot? Press <code>Cmd+Shift+D</code>. Paste into Claude.ai. Done.</p>
-<button class="btn" onclick="${run('devflow.generateSnapshot')}">Generate Context Now</button>
+<button class="btn" onclick="${run('devflow.generateSnapshot')}">Generate Context Now (Cmd+Shift+D)</button>
 
 <h2>Proxy Routing (Continue.dev, Roo Code, Cline)</h2>
 <p><strong>One key is enough.</strong> DevFlow adds Ollama as free fallback when you run <code>ollama run llama3.2</code>.</p>
 <ul class="steps">
-  <li><button class="btn" onclick="${run('devflow.addApiKey')}">Add API Key</button></li>
-  <li><button class="btn" onclick="${run('devflow.startProxy')}">Start Proxy</button></li>
-  <li><button class="btn" onclick="${run('devflow.connectContinue')}">Connect Your Tool</button></li>
+  <li class="done">1. Add API Key${s1} <button class="btn" onclick="${run('devflow.addApiKey')}">Add API Key</button></li>
+  <li class="done">2. Start Proxy${s2} <button class="btn" onclick="${run('devflow.startProxy')}">Start Proxy</button></li>
+  <li>3. Connect Your Tool <button class="btn" onclick="${run('devflow.connectContinue')}">Connect</button></li>
 </ul>
 
 <div class="tip">
@@ -66,9 +95,10 @@ function getStartedHtml(webview: vscode.Webview): string {
 </div>
 
 <button class="btn" onclick="${run('devflow.openDashboard')}">Open Dashboard</button>
+<button class="btn btn-ghost" onclick="vscode.postMessage({command:'refresh'})">Refresh progress</button>
 
-<hr style="margin-top:32px">
-<p style="font-size:12px;color:var(--vscode-descriptionForeground)">Context snapshot needs no keys. Proxy needs at least one (OpenAI or Anthropic).</p>
+<hr>
+<p class="muted">Context snapshot needs no keys. Proxy needs at least one (OpenAI or Anthropic).</p>
 </body>
 <script>
   const vscode = acquireVsCodeApi();

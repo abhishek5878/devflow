@@ -61,9 +61,13 @@ export class DevFlowStatusBar {
           );
           if (!this.warnedProviders.has(provider)) {
             this.warnedProviders.add(provider);
-            vscode.window.showWarningMessage(
-              `DevFlow: ${provider} at ${Math.round(percentUsed * 100)}% capacity. Next provider will be used at limit.`
+            const action = await vscode.window.showWarningMessage(
+              `DevFlow: ${provider} at ${Math.round(percentUsed * 100)}% capacity. Add another key for stronger fallback.`,
+              'Add API Key'
             );
+            if (action === 'Add API Key') {
+              vscode.commands.executeCommand('devflow.addApiKey');
+            }
           }
         } else {
           this.statusBarItem.backgroundColor = undefined;

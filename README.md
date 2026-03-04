@@ -67,6 +67,7 @@ You'll see Claude "exhaust" after ~2-3 requests, then silent failover to GPT-4.
 ```bash
 npm test          # Build, context, extension
 npm run test:all  # Above + proxy failover + client (starts proxy automatically)
+npm run test:userflow  # End-to-end user flow (Context Snapshot + Proxy)
 ```
 
 For manual proxy test:
@@ -157,4 +158,4 @@ On Node 18, use the extension from source with F5 (see Phase 3 above).
 
 ## Roadmap
 
-- **Phase 4:** Publish to VS Code Marketplace
+- **Phase 4:** Publish to VS Code Marketplace — see [PUBLISH.md](PUBLISH.md) for steps
